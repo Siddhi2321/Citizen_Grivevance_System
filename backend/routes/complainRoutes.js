@@ -1,9 +1,10 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { submitComplaint , trackComplaint} = require('../controllers/complaintsController');
+const multer = require("multer");
+const { submitComplaint } = require("../controllers/complaintsController");
 
-router.post('/submit', submitComplaint);
+const upload = multer({ dest: "uploads/" });
 
-router.get("/:grievanceId", trackComplaint);
+router.post("/submit", upload.array("attachments", 5), submitComplaint);
 
 module.exports = router;
