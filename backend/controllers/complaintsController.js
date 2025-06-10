@@ -3,6 +3,7 @@ const User = require("../models/user");
 const Officer = require("../models/officer");
 const { nanoid } = require('nanoid');
 const cloudinary = require("../utils/cloudinary");
+const { sendComplaintConfirmation } = require("../utils/sendEmail");
 
 exports.submitComplaint = async (req, res) => {
   try {
@@ -12,7 +13,7 @@ exports.submitComplaint = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const { district, city, pincode, addressLine } = JSON.parse(location);
+    const { district, city, pincode, addressLine } =location;
 
     const categoryToDepartment = {
       "Municipal Issues": "Municipal Corporation",
