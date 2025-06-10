@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const mongoose = require('mongoose');
+const authRoutes = require('./routes/authRoutes');
+const complaintRoutes = require('./routes/complainRoutes');
 
 const app = express();
 app.use(cors());
@@ -11,7 +13,17 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.error("MongoDB error", err));
 
+  
+app.use(express.json());
+app.use('/api/auth', authRoutes);
+
+app.use('/api/complaints', complaintRoutes);
+
+
+
 app.get('/', (req, res) => res.send('Backend Running...'));
+
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
