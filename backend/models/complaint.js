@@ -1,4 +1,3 @@
-// models/Complaint.js
 const mongoose = require('mongoose');
 
 const complaintSchema = new mongoose.Schema({
@@ -56,7 +55,7 @@ const complaintSchema = new mongoose.Schema({
   },
   officerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Officer',
+    ref: 'officer',
     default: null
   },
   logs: [
