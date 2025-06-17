@@ -141,3 +141,19 @@ exports.trackComplaint = async (req, res) => {
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+exports.getUserComplaints = async (req, res) => {
+  try {
+    const { email } = req.session.user;
+    console.log("Session user:", req.session.user);
+
+    const complaints = await Complaint.find({ "contactInfo.email": email })
+      .sort({ submittedAt: -1 });
+
+    res.status(200).json({ email, complaints });
+  } catch (error) {
+    console.error("Error fetching user complaints:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+

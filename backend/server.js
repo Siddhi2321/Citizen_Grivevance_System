@@ -4,6 +4,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/authRoutes');
 const complaintRoutes = require('./routes/complainRoutes');
+const sessionMiddleware = require("./middleware/sessionMiddleware");
 
 const app = express();
 app.use(cors());
@@ -15,6 +16,8 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
 
   
 app.use(express.json());
+app.use(sessionMiddleware);
+
 app.use('/api/auth', authRoutes);
 
 app.use('/api/complaints', complaintRoutes);

@@ -22,14 +22,14 @@ const officerSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true, // Store hashed password using bcrypt or similar
+    required: true,
   },
   designation: {
-    type: String, // e.g., Junior Engineer, Sanitation Inspector
+    type: String,
     required: true,
   },
   department: {
-    type: String, // e.g., Water Supply, Public Works
+    type: String,
     required: true,
   },
   location: {

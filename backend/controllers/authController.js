@@ -1,9 +1,10 @@
 const User = require('../models/user');
 const Otp = require('../models/otp');
 const { v4: uuidv4 } = require('uuid');
-const sendEmail = require('../utils/sendEmail');
+const {sendEmail} = require('../utils/sendEmail');
+const Complaint = require("../models/complaint");
 
-exports.sendOtpToUser = async (req, res) => {
+const sendOtpToUser = async (req, res) => {
   const { email } = req.body;
 
   if (!email) return res.status(400).json({ message: 'Email is required' });
@@ -27,7 +28,7 @@ exports.sendOtpToUser = async (req, res) => {
 };
 
 
-exports.verifyOtp = async (req, res) => {
+const verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
 
   if (!email || !otp) return res.status(400).json({ message: 'Email and OTP are required' });
@@ -55,6 +56,12 @@ exports.verifyOtp = async (req, res) => {
 
     await Otp.deleteMany({ email });
 
+    req.session.user = {
+      citizen_id: user.citizen_id,
+      email: user.email,
+      loginTime: now
+    };
+
     return res.status(200).json({
       message: 'Login successful',
       user: {
@@ -66,4 +73,22 @@ exports.verifyOtp = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: "Error during verification", error: err.message });
   }
+};
+
+
+const logoutUser = (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Logout error:", err);
+      return res.status(500).json({ message: "Logout failed" });
+    }
+    res.clearCookie("connect.sid");
+    res.status(200).json({ message: "Logged out successfully" });
+  });
+};
+
+module.exports = {
+  sendOtpToUser,
+  verifyOtp,
+  logoutUser
 };
