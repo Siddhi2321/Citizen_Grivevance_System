@@ -40,6 +40,8 @@ exports.submitComplaint = async (req, res) => {
       "location.city": city,
     });
 
+    console.log(assignedOfficer);
+
     if (!assignedOfficer) {
       assignedOfficer = await Officer.findOne({ department });
     }
@@ -94,7 +96,7 @@ exports.submitComplaint = async (req, res) => {
     });
 
     return res.status(201).json({
-      message: "Complaint submitted successfully",
+      message: "Complaint submitted successfully 2",
       complaint: newComplaint,
     });
   } catch (error) {
