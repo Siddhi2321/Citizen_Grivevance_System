@@ -27,8 +27,8 @@ exports.sendOtpToOfficer = async (req, res, next) => {
   }
 };
 
+//change or forgot password
 
-// Step 2: Register Officer
 exports.registerOfficer = async (req, res) => {
   const {
     name, email, mobile, password, designation,
@@ -80,7 +80,7 @@ exports.loginOfficer = async (req, res) => {
     officer.lastLogin = new Date();
     await officer.save();
 
-    req.session.user = {
+    req.session.officer = {
       email: user.email,
       loginTime: now
     };

@@ -24,6 +24,12 @@ const adminSchema = new mongoose.Schema({
     enum: ['superadmin', 'departmentadmin', 'viewer'],
     default: 'departmentadmin'
   },
+  department: {
+    type: String,
+    required: function () {
+      return this.role === 'departmentadmin';
+    }
+  },
   lastLogin: {
     type: Date
   },

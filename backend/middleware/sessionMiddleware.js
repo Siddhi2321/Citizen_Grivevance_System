@@ -5,9 +5,10 @@ const sessionMiddleware = session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 10 * 60 * 1000,
+    maxAge: 20 * 60 * 1000,
     httpOnly: true,
-    sameSite: "lax"
+    sameSite: "lax",
+    secure: false, 
   }
 });
 

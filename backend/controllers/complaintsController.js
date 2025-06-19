@@ -7,7 +7,8 @@ const { sendComplaintConfirmation } = require("../utils/sendEmail");
 
 exports.submitComplaint = async (req, res) => {
   try {
-    const { email, category, title, description, location } = req.body;
+    const { email } = req.session.user;
+    const { category, title, description, location } = req.body;
 
     if (!email || !category || !description || !location) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -34,17 +35,17 @@ exports.submitComplaint = async (req, res) => {
       citizen = await User.create({ email });
     }
 
-    let assignedOfficer = await Officer.findOne({
-      department,
-      "location.district": district,
-      "location.city": city,
-    });
+    // let assignedOfficer = await Officer.findOne({
+    //   department,
+    //   "location.district": district,
+    //   "location.city": city,
+    // });
 
-    console.log(assignedOfficer);
+    // console.log(assignedOfficer);
 
-    if (!assignedOfficer) {
-      assignedOfficer = await Officer.findOne({ department });
-    }
+    // if (!assignedOfficer) {
+    //   assignedOfficer = await Officer.findOne({ department });
+    // }
     const uploadedAttachments = [];
 
     if (req.files && req.files.length > 0) {
@@ -76,7 +77,7 @@ exports.submitComplaint = async (req, res) => {
       },
       citizenId: citizen._id,
       contactInfo: { email },
-      officerId: assignedOfficer ? assignedOfficer._id : null,
+      officerId: null,
       attachments: uploadedAttachments,
     });
 
@@ -107,7 +108,6 @@ exports.submitComplaint = async (req, res) => {
   }
 };
 
-
 exports.trackComplaint = async (req, res) => {
   try {
     const { grievanceId } = req.params;
@@ -131,6 +131,7 @@ exports.trackComplaint = async (req, res) => {
         status: complaint.status,
         location: complaint.location,
         contactEmail: complaint.contactInfo?.email,
+        //
         officer: complaint.officerId || null,
         logs: complaint.logs || [],
         attachments: complaint.attachments || [],

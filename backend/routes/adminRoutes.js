@@ -1,11 +1,23 @@
 
 const express = require('express');
 const router = express.Router();
-const { dashboardStats } = require('../controllers/adminController');
+const adminController = require('../controllers/adminController');
+const requireAdminSession = require('../middleware/requireAdminSession');
 
-// const requireAdmin = require('../middleware/requireAdmin');
-// router.get('/dashboard', requireAdmin, dashboardStats);
+// (api/admin)
 
-router.get('/dashboard', dashboardStats);
+router.post('/login', adminController.loginAdmin);
+
+//stats
+router.get('/dashboard', requireAdminSession, adminController.dashboardStats);
+
+//assign complaints 
+router.get('/get-complaints', requireAdminSession, adminController.getDepartmentComplaints);
+router.get('/get-officers', requireAdminSession, adminController.getDepartmentOfficers);
+router.post('/assign', requireAdminSession, adminController.assignOfficerToComplaint);
+
+//officer performance
+router.get('/officer-performance', requireAdminSession, adminController.getOfficerPerformance);
+
 
 module.exports = router;
