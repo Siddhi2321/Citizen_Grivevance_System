@@ -9,45 +9,47 @@ const CitizenDashboard = () => {
   const [loading, setLoading] = useState(true);
   const userType = localStorage.getItem('userType');
 
-  useEffect(() => {
-    // Simulate API call with dummy data
-    setTimeout(() => {
-      const dummyGrievances = [
-        {
-          _id: 'GRV123456',
-          title: 'Poor Road Condition on Main Street',
-          description: 'Multiple potholes and broken pavement causing traffic issues.',
-          category: 'Infrastructure',
-          priority: 'High',
-          status: 'In Progress',
-          submittedDate: '2024-01-15T10:30:00Z',
-          trackingId: 'TRK123456'
-        },
-        {
-          _id: 'GRV123457',
-          title: 'Street Light Not Working',
-          description: 'Street light at the corner of Oak and Pine streets has been non-functional.',
-          category: 'Infrastructure',
-          priority: 'Medium',
-          status: 'Resolved',
-          submittedDate: '2024-01-10T14:20:00Z',
-          trackingId: 'TRK123457'
-        },
-        {
-          _id: 'GRV123458',
-          title: 'Garbage Collection Delays',
-          description: 'Regular garbage collection has been delayed by 2-3 days consistently.',
-          category: 'Sanitation',
-          priority: 'Medium',
-          status: 'Pending',
-          submittedDate: '2024-01-20T09:15:00Z',
-          trackingId: 'TRK123458'
+ useEffect(() => {
+
+  const fetchGrievances = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/complaints/userComplaints`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
         }
-      ];
-      setUserGrievances(dummyGrievances);
+      });
+
+      const data = await response.json();
+      console.log(data);
+      if (response.ok) {
+        // data.complaints is the array returned from backend
+        const mapped = data.complaints.map((g) => ({
+          _id: g._id,
+          title: g.title,
+          description: g.description,
+          category: g.category,
+          priority: 'Medium',
+          status: g.status || 'Pending',
+          submittedDate: g.submittedAt,
+          trackingId: g.grievanceId
+        }));
+
+        setUserGrievances(mapped);
+      } else {
+        console.error("Failed to fetch complaints:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching complaints:", error);
+    } finally {
       setLoading(false);
-    }, 1500);
-  }, []);
+    }
+  };
+
+  fetchGrievances();
+}, []);
+
+
 
   // Redirect if not logged in as citizen
   if (!userType || userType !== 'citizen') {
@@ -132,11 +134,18 @@ const CitizenDashboard = () => {
     );
   }
 
+  // const stats = {
+  //   total: userGrievances.length,
+  //   resolved: userGrievances.filter(g => g.status === 'Resolved').length,
+  //   inProgress: userGrievances.filter(g => g.status === 'In Progress').length,
+  //   pending: userGrievances.filter(g => g.status === 'Pending').length
+  // };
+
   const stats = {
     total: userGrievances.length,
-    resolved: userGrievances.filter(g => g.status === 'Resolved').length,
-    inProgress: userGrievances.filter(g => g.status === 'In Progress').length,
-    pending: userGrievances.filter(g => g.status === 'Pending').length
+    resolved:5,
+    inProgress:7,
+    pending:0
   };
 
   return (

@@ -62,6 +62,8 @@ const verifyOtp = async (req, res) => {
       loginTime: now
     };
 
+    console.log('Session created:', req.session.user);
+
     return res.status(200).json({
       message: 'Login successful',
       user: {

@@ -35,50 +35,49 @@ const CitizenLogin = () => {
 
         try {
             // TODO: Replace with actual MongoDB API call
-            // const response = await fetch('/api/auth/generate-otp', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({ email })
-            // });
-            // const data = await response.json();
+            const response = await fetch('http://localhost:5000/api/auth/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            const data = await response.json();
             
-            // For now, simulate OTP generation
-            showMessagePopup(`Your OTP is: 1234\nPlease use this to verify your email.`);
-            setShowOtpField(true);
+            if(data.message === "OTP sent successfully"){
+                setShowOtpField(true);
+            }
+            
         } catch (error) {
             console.error('OTP generation error:', error);
             showMessagePopup('Failed to generate OTP. Please try again.');
         }
     };
+const handleLogin = async () => {
+  try {
+    const response = await fetch("http://localhost:5000/api/auth/verify-otp", {
+      method: "POST",
+      credentials: "include", 
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, otp }),
+    });
 
-    const handleLogin = async () => {
-        if (otp === '1234') {
-            try {
-                // TODO: Replace with actual MongoDB API call
-                // const response = await fetch('/api/auth/verify-otp', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify({ email, otp })
-                // });
-                // const data = await response.json();
-                
-                // Store authentication data in localStorage for session management
-                localStorage.setItem('userType', 'citizen');
-                localStorage.setItem('isAuthenticated', 'true');
-                localStorage.setItem('userName', email);
-                localStorage.setItem('userEmail', email);
-                localStorage.setItem('citizenEmail', email);
-                
-                // Navigate to citizen dashboard
-                navigate('/citizen/dashboard');
-            } catch (error) {
-                console.error('Login error:', error);
-                showMessagePopup('Login failed. Please try again.');
-            }
-        } else {
-            showMessagePopup('Invalid OTP. Please try again.');
-        }
-    };
+    const data = await response.json();
+
+    if (data.message === "Login successful") {
+      localStorage.setItem("userType", "citizen");
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("userName", email);
+      localStorage.setItem("userEmail", email);
+      localStorage.setItem("citizenEmail", email);
+
+      navigate("/citizen/dashboard");
+    } else {
+      showMessagePopup("Invalid OTP or email.");
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    showMessagePopup("Login failed. Please try again.");
+  }
+};
 
     return (
         <div style={pageContainer}>

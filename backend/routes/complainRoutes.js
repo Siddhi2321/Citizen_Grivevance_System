@@ -8,7 +8,7 @@ const upload = multer({ dest: "uploads/" });
 
 router.post("/submit", upload.array("attachments", 5), submitComplaint);
 
-router.get("/user-complaints", requireSession, getUserComplaints);
+router.get("/userComplaints", requireSession, getUserComplaints);
 
 router.get("/:grievanceId", trackComplaint);
 

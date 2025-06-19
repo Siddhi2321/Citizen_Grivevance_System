@@ -7,7 +7,8 @@ const { sendComplaintConfirmation } = require("../utils/sendEmail");
 
 exports.submitComplaint = async (req, res) => {
   try {
-    const { email } = req.session.user;
+    const { email } = req.session.user.email;
+    console.log(req.session.user);
     const { category, title, description, location } = req.body;
 
     if (!email || !category || !description || !location) {
@@ -147,7 +148,16 @@ exports.trackComplaint = async (req, res) => {
 
 exports.getUserComplaints = async (req, res) => {
   try {
-    const { email } = req.session.user;
+    try {
+       if (!req.session.user || !req.session.user.email) {
+         console.log("No session found:", req.session);
+         return res.status(401).json({ message: "Unauthorized: Please log in" });
+      }
+    } catch (error) {
+      console.error("Error fetching user complaints:", error);
+      res.status(500).json({ message: "Server error", error: error.message });
+    }
+    const { email } = req.session.user.email;
     console.log("Session user:", req.session.user);
 
     const complaints = await Complaint.find({ "contactInfo.email": email })
@@ -159,4 +169,3 @@ exports.getUserComplaints = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
