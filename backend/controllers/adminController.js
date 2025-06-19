@@ -125,12 +125,15 @@ exports.getDepartmentOfficers = async (req, res) => {
 exports.assignOfficerToComplaint = async (req, res) => {
   try {
     const { officerName, grievanceId } = req.body;
+    console.log("Assigning complaint:", grievanceId, "to", officerName);
+
 
     if (!officerName || !grievanceId) {
       return res.status(400).json({ message: "Officer name and grievance ID are required" });
     }
 
     const officer = await Officer.findOne({ name: officerName });
+    console.log("Officer found:", officer._id);
 
     if (!officer) {
       return res.status(404).json({ message: "Officer not found" });
@@ -141,6 +144,7 @@ exports.assignOfficerToComplaint = async (req, res) => {
       { officerId: officer._id, status: 'in_progress', updatedAt: new Date() },
       { new: true }
     );
+    console.log("Complaint updated:", updatedComplaint);
 
     if (!updatedComplaint) {
       return res.status(404).json({ message: "Complaint not found" });

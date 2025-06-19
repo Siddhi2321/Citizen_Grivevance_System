@@ -13,50 +13,47 @@ const OfficerLogin = () => {
     const [showMessage, setShowMessage] = useState(false);
 
     const handleLogin = async () => {
-        if (!email || !password) {
-            setMessage('Please fill in all fields');
+    if (!email || !password) {
+        setMessage('Please fill in all fields');
+        setShowMessage(true);
+        return;
+    }
+
+    try {
+        const response = await fetch('http://localhost:5000/api/officer/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // Important for session cookies
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            setMessage(data.message || 'Login failed');
             setShowMessage(true);
             return;
         }
 
-        try {
-            // TODO: Replace with actual MongoDB API call
-            // const response = await fetch('/api/auth/login', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({ email, password })
-            // });
-            // const data = await response.json();
-            
-            // For now, simulate authentication based on email
-            let userType = 'officer';
-            let userName = email;
-            
-            // Check if email contains 'admin' to determine user type
-            if (email.toLowerCase().includes('admin')) {
-                userType = 'admin';
-                userName = email.replace('@', ' (Admin)');
-            }
+        // Store in localStorage
+        localStorage.setItem('userType', data.userType);
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('userName', data.user.name);
+        localStorage.setItem('userEmail', data.user.email);
 
-            // Store authentication data in localStorage for session management
-            localStorage.setItem('userType', userType);
-            localStorage.setItem('isAuthenticated', 'true');
-            localStorage.setItem('userName', userName);
-            localStorage.setItem('userEmail', email);
-            
-            // Navigate based on user type
-            if (userType === 'admin') {
-                navigate('/admin/dashboard');
-            } else {
-                navigate('/officer/dashboard');
-            }
-
-        } catch (error) {
-            console.error('Login error:', error);
-            setMessage('Login failed. Please try again.');
-            setShowMessage(true);
+        // Navigate based on user type
+        if (data.userType === 'admin') {
+            navigate('/admin/dashboard');
+        } else {
+            navigate('/officer/dashboard');
         }
-    };
+
+    } catch (error) {
+        console.error('Login error:', error);
+        setMessage('Login failed. Please try again.');
+        setShowMessage(true);
+    }
+};
 
     return (
         <div style={pageContainer}>

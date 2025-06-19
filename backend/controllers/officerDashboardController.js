@@ -1,26 +1,24 @@
 const Complaint = require('../models/complaint');
 const Officer = require('../models/officer');
+const cloudinary = require("../utils/cloudinary");
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
 exports.getOfficerGrievances = async (req, res) => {
   try {
     const officerEmail = req.session.officer?.email;
-
     if (!officerEmail) {
-      return res.status(401).json({ message: "Unauthorized: Officer not logged in" });
+      return res.status(401).json({ message: 'Unauthorized: Officer not logged in' });
     }
 
     const officer = await Officer.findOne({ email: officerEmail });
-
     if (!officer) {
-      return res.status(404).json({ message: "Officer not found" });
+      return res.status(404).json({ message: 'Officer not found' });
     }
 
-    const { department, location } = officer;
-
+    const { department } = officer;
     const grievances = await Complaint.find({
       department,
-      "location.city": location.city,
-      "location.district": location.district,
       officerId: officer._id
     }).sort({ submittedAt: -1 });
 
@@ -29,14 +27,24 @@ exports.getOfficerGrievances = async (req, res) => {
       title: c.title,
       description: c.description,
       category: c.category,
-      assignedDate: c.updatedAt.toLocaleDateString(),
+      priority: c.priority,
       status: c.status,
+      submittedDate: c.submittedAt,
+      assignedDate: c.updatedAt,
+      location: c.location,
+      citizen: c.citizenId ? {
+        name: c.citizenId.name,
+        email: c.citizenId.email,
+        phone: c.citizenId.phone
+      } : null,
+      evidence: c.attachments || [],
+      updates: c.logs || []
     }));
 
     res.status(200).json({ grievances: formattedGrievances });
   } catch (error) {
-    console.error("Error fetching officer grievances:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error('Error fetching officer grievances:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -44,24 +52,22 @@ exports.getGrievanceDetails = async (req, res) => {
   try {
     const officerEmail = req.session.officer?.email;
     const grievanceId = req.params.grievanceId;
-
     if (!officerEmail) {
-      return res.status(401).json({ message: "Unauthorized: Officer not logged in" });
+      return res.status(401).json({ message: 'Unauthorized: Officer not logged in' });
     }
 
     const officer = await Officer.findOne({ email: officerEmail });
-
     if (!officer) {
-      return res.status(404).json({ message: "Officer not found" });
+      return res.status(404).json({ message: 'Officer not found' });
     }
 
     const complaint = await Complaint.findOne({
-      grievanceId: grievanceId,
+      grievanceId,
       officerId: officer._id
-    }).populate('citizenId', 'email');
+    }).populate('citizenId', 'name email phone');
 
     if (!complaint) {
-      return res.status(404).json({ message: "Grievance not found or not assigned to you" });
+      return res.status(404).json({ message: 'Grievance not found or not assigned to you' });
     }
 
     const grievanceDetails = {
@@ -69,22 +75,29 @@ exports.getGrievanceDetails = async (req, res) => {
       title: complaint.title,
       category: complaint.category,
       description: complaint.description,
-      location: complaint.location,
+      location: {
+      address: `${complaint.location.addressLine}, 
+         ${complaint.location.city}, 
+         ${complaint.location.district}, 
+         ${complaint.location.state} -
+          ${complaint.location.pincode}`,
+      },
       status: complaint.status,
-      submittedDate: complaint.submittedAt.toLocaleDateString(),
-      assignedDate: complaint.updatedAt.toLocaleDateString(),
-      citizen: complaint.citizenId ? {
-        email: complaint.citizenId.email
-      } : null
+      priority: complaint.priority,
+      submittedDate: complaint.submittedAt,
+      assignedDate: complaint.updatedAt,
+      citizen: complaint.contactInfo.email ,
+      evidence: complaint.attachments || [],
+      updates: complaint.logs || []
     };
 
     res.status(200).json({ grievance: grievanceDetails });
-
   } catch (error) {
-    console.error("Error fetching grievance details:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error('Error fetching grievance details:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 exports.getOfficerComplaintStats = async (req, res) => {
   try {
@@ -127,3 +140,74 @@ exports.getOfficerComplaintStats = async (req, res) => {
   }
 };
 
+
+exports.updateGrievanceStatus = async (req, res) => {
+  try {
+    const officerEmail = req.session.officer?.email;
+    const { grievanceId } = req.params;
+    const { status, notes } = req.body;
+
+    if (!officerEmail) return res.status(401).json({ message: 'Unauthorized' });
+
+    const officer = await Officer.findOne({ email: officerEmail });
+    if (!officer) return res.status(404).json({ message: 'Officer not found' });
+
+    const complaint = await Complaint.findOneAndUpdate(
+      { grievanceId, officerId: officer._id },
+      {
+        status,
+        $push: {
+          logs: {
+            date: new Date(),
+            status,
+            notes,
+            officer: officer.name
+          }
+        }
+      },
+      { new: true }
+    );
+
+    if (!complaint) return res.status(404).json({ message: 'Not assigned' });
+    res.json({ message: 'Updated!', grievance: complaint });
+  } catch (err) {
+    console.error('Update error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+exports.uploadEvidence = async (req, res) => {
+  try {
+    const officerEmail = req.session.officer?.email;
+    const { grievanceId } = req.params;
+    const file = req.file;
+
+    if (!officerEmail || !file) return res.status(400).json({ message: 'Invalid request' });
+
+    const officer = await Officer.findOne({ email: officerEmail });
+    if (!officer) return res.status(404).json({ message: 'Officer not found' });
+
+    // const uploaded = await cloudinary.uploader.upload(file.path);
+
+    // const complaint = await Complaint.findOneAndUpdate(
+    //   { grievanceId, officerId: officer._id },
+    //   {
+    //     $push: {
+    //       attachments: {
+    //         fileUrl: uploaded.secure_url,
+    //         fileType: uploaded.resource_type + '/' + uploaded.format,
+    //         uploadedBy: officer.name,
+    //         uploadedAt: new Date()
+    //       }
+    //     }
+    //   },
+    //   { new: true }
+    // );
+
+    if (!complaint) return res.status(404).json({ message: 'Not assigned' });
+    res.json({ message: 'Evidence submitted', grievance: complaint });
+  } catch (err) {
+    console.error('Upload error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};

@@ -1,5 +1,6 @@
 const Officer = require("../models/officer");
 const { sendEmail } = require("../utils/sendEmail");
+const Admin = require("../models/admin");
 const bcrypt = require("bcrypt");
 
 exports.sendOtpToOfficer = async (req, res, next) => {
@@ -67,34 +68,94 @@ exports.registerOfficer = async (req, res) => {
   }
 };
 
-exports.loginOfficer = async (req, res) => {
+// exports.loginOfficer = async (req, res) => {
+//   const { email, password } = req.body;
+
+//   try {
+//     const officer = await Officer.findOne({ email });
+//     if (!officer) return res.status(404).json({ message: "Officer not found" });
+
+//     const isMatch = await bcrypt.compare(password, officer.password);
+//     if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+
+//     officer.lastLogin = new Date();
+//     await officer.save();
+
+//     req.session.officer = {
+//       email: user.email,
+//       loginTime: now
+//     };
+
+//     res.status(200).json({
+//       message: "Login successful",
+//       officer: {
+//         id: officer._id,
+//         name: officer.name,
+//         role: officer.role,
+//         department: officer.department
+//       }
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error", error });
+//   }
+// };
+
+exports.loginOfficerOrAdmin = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const officer = await Officer.findOne({ email });
-    if (!officer) return res.status(404).json({ message: "Officer not found" });
+    let userType = null;
+    let user = await Officer.findOne({ email });
 
-    const isMatch = await bcrypt.compare(password, officer.password);
-    if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+    if (user) userType = "officer";
+    else {
+      user = await Admin.findOne({ email });
+      if (user) userType = "admin";
+    }
 
-    officer.lastLogin = new Date();
-    await officer.save();
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    req.session.officer = {
+    // const isMatch = await bcrypt.compare(password, user.password);
+    // if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+
+    if(password !== user.password){
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    user.lastLogin = new Date();
+    await user.save();
+
+    const sessionData = {
       email: user.email,
-      loginTime: now
+      loginTime: new Date(),
+      role: userType,
     };
+
+    // Store session accordingly
+    if (userType === "officer") req.session.officer = sessionData;
+    else {
+      req.session.admin = {
+      email: user.email,
+      department: user.department,
+      loginTime: Date.now()
+      };
+    } 
 
     res.status(200).json({
       message: "Login successful",
-      officer: {
-        id: officer._id,
-        name: officer.name,
-        role: officer.role,
-        department: officer.department
+      userType,
+      user: {
+        id: user._id,
+        name: user.name,
+        department: user.department || null,
+        role: user.role || userType
       }
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+

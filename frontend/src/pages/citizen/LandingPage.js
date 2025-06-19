@@ -139,7 +139,7 @@ const LandingPage = () => {
                     </div>
                 </div>
 
-                {/* Grievance History Section - Only shown when logged in as citizen */}
+              {/*Grievance History Section - Only shown when logged in as citizen 
                 {isAuthenticated && userType === 'citizen' && (
                     <div style={{ marginTop: 40 }}>
                         <h2 style={{ fontSize: 32, marginBottom: 20, textAlign: 'center' }}>Your Grievance History</h2>
@@ -166,10 +166,10 @@ const LandingPage = () => {
                             </div>
                         )}
                     </div>
-                )}
-            </div>
+                )} */}
 
-            {/* Footer */}
+            </div> 
+
             <div style={{ 
                 display: 'flex', 
                 justifyContent: 'center', 

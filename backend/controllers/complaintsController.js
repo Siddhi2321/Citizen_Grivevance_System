@@ -5,17 +5,139 @@ const { nanoid } = require('nanoid');
 const cloudinary = require("../utils/cloudinary");
 const { sendComplaintConfirmation } = require("../utils/sendEmail");
 
+// exports.submitComplaint = async (req, res) => {
+//   try {
+//     const { email } = req.session.user.email;
+//     console.log(req.session.user);
+//     const { category, title, description, location } = req.body;
+
+//     if (!email || !category || !description || !location) {
+//       return res.status(400).json({ message: "Missing required fields" });
+//     }
+
+//     const { district, city, pincode, addressLine } =location;
+
+//     const categoryToDepartment = {
+//       "Municipal Issues": "Municipal Corporation",
+//       "Utility Services": "Electricity & Water Department",
+//       "Public Safety & Law Enforcement": "Police Department",
+//       "Government Schemes & Services": "Administration",
+//       "Healthcare & Sanitation": "Health Department",
+//       "Education & Youth Services": "Education Department",
+//       "Transport & Infrastructure": "Transport Department",
+//       "Digital and Online Services": "IT Department",
+//       "Others (General Complaints)": "General Affairs",
+//     };
+
+//     const department = categoryToDepartment[category] || "General Affairs";
+
+//     let citizen = await User.findOne({ email });
+//     if (!citizen) {
+//       citizen = await User.create({ email });
+//     }
+
+//     // let assignedOfficer = await Officer.findOne({
+//     //   department,
+//     //   "location.district": district,
+//     //   "location.city": city,
+//     // });
+
+//     // console.log(assignedOfficer);
+
+//     // if (!assignedOfficer) {
+//     //   assignedOfficer = await Officer.findOne({ department });
+//     // }
+//     const uploadedAttachments = [];
+
+//     if (req.files && req.files.length > 0) {
+//       for (const file of req.files) {
+//         const result = await cloudinary.uploader.upload(file.path, {
+//           folder: "grievance_attachments",
+//         });
+//         uploadedAttachments.push({
+//           fileUrl: result.secure_url,
+//           fileType: result.resource_type + "/" + result.format,
+//         });
+//       }
+//     }
+
+//     const applicant = "GRIEVANCE-";
+//     const grievanceId = applicant + nanoid(10);
+//     const newComplaint = new Complaint({
+//       grievanceId,
+//       title,
+//       category,
+//       description,
+//       department,
+//       location: {
+//         state: "Maharashtra",
+//         district,
+//         city,
+//         pincode,
+//         addressLine,
+//       },
+//       citizenId: citizen._id,
+//       contactInfo: { email },
+//       officerId: null,
+//       attachments: uploadedAttachments,
+//     });
+
+//     await newComplaint.save();
+
+//     citizen.complaint_ids = citizen.complaint_ids || [];
+//     citizen.complaint_ids.push(newComplaint._id);
+//     await citizen.save();
+
+//     await sendComplaintConfirmation({
+//           to: email,
+//           grievanceId,
+//           title,
+//           category,
+//           description,
+//           location,
+//     });
+
+//     return res.status(201).json({
+//       message: "Complaint submitted successfully 2",
+//       complaint: newComplaint,
+//     });
+//   } catch (error) {
+//     console.error("Error submitting complaint:", error);
+//     return res
+//       .status(500)
+//       .json({ message: "Server error", error: error.message });
+//   }
+// };
+
 exports.submitComplaint = async (req, res) => {
   try {
-    const { email } = req.session.user.email;
-    console.log(req.session.user);
-    const { category, title, description, location } = req.body;
+    const email = req.session?.user?.email;
+    if (!email) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No email in session" });
+    }
 
+    console.log(req.session.user);
+    const { category, title, description} = req.body;
+    
+    let location;
+    try {
+      location = JSON.parse(req.body.location);
+    } catch (e) {
+      return res.status(400).json({ message: "Invalid location format" });
+    }
+
+
+    console.log("Category ", category);
+    console.log("title ", title);
+    console.log("description ", description);
+    console.log("location ", location);
     if (!email || !category || !description || !location) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const { district, city, pincode, addressLine } =location;
+    const { district, city, pincode, addressLine } = location;
 
     const categoryToDepartment = {
       "Municipal Issues": "Municipal Corporation",
@@ -36,17 +158,6 @@ exports.submitComplaint = async (req, res) => {
       citizen = await User.create({ email });
     }
 
-    // let assignedOfficer = await Officer.findOne({
-    //   department,
-    //   "location.district": district,
-    //   "location.city": city,
-    // });
-
-    // console.log(assignedOfficer);
-
-    // if (!assignedOfficer) {
-    //   assignedOfficer = await Officer.findOne({ department });
-    // }
     const uploadedAttachments = [];
 
     if (req.files && req.files.length > 0) {
@@ -89,17 +200,18 @@ exports.submitComplaint = async (req, res) => {
     await citizen.save();
 
     await sendComplaintConfirmation({
-          to: email,
-          grievanceId,
-          title,
-          category,
-          description,
-          location,
+      to: email,
+      grievanceId,
+      title,
+      category,
+      description,
+      location,
     });
-
+    console.log("grievanceId", grievanceId);
     return res.status(201).json({
       message: "Complaint submitted successfully 2",
       complaint: newComplaint,
+      grievanceId,
     });
   } catch (error) {
     console.error("Error submitting complaint:", error);

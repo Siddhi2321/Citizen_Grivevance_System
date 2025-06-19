@@ -9,6 +9,7 @@ const connectDB = require("./connection/db");
 const officerRoutes = require('./routes/officerRoutes');
 const admin = require('./models/admin');
 const adminRoutes = require('./routes/adminRoutes');
+const sessionRoutes = require('./routes/sessionRoutes');
 const app = express();
 app.use(express.json());
 
@@ -36,6 +37,11 @@ app.use('/api/officer', officerRoutes);
 
 //admin
 app.use('/api/admin', adminRoutes);
+
+
+
+//session
+app.use('/api', sessionRoutes);
 
 app.get('/', (req, res) => res.send('Backend Running...'));
 
