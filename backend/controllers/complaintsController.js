@@ -146,6 +146,8 @@ exports.trackComplaint = async (req, res) => {
   }
 };
 
+
+
 exports.getUserComplaints = async (req, res) => {
   try {
     try {
@@ -157,11 +159,13 @@ exports.getUserComplaints = async (req, res) => {
       console.error("Error fetching user complaints:", error);
       res.status(500).json({ message: "Server error", error: error.message });
     }
-    const { email } = req.session.user.email;
-    console.log("Session user:", req.session.user);
+    const email = req.session.user.email;
+    console.log("Session user:", req.session.user.email);
 
-    const complaints = await Complaint.find({ "contactInfo.email": email })
+   const complaints = await Complaint.find({ "contactInfo.email": email })
       .sort({ submittedAt: -1 });
+    
+    console.log("Complaints:", complaints);  
 
     res.status(200).json({ email, complaints });
   } catch (error) {

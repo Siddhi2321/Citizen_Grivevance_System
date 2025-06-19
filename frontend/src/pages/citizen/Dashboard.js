@@ -34,7 +34,6 @@ const CitizenDashboard = () => {
           submittedDate: g.submittedAt,
           trackingId: g.grievanceId
         }));
-
         setUserGrievances(mapped);
       } else {
         console.error("Failed to fetch complaints:", data.message);
@@ -134,18 +133,11 @@ const CitizenDashboard = () => {
     );
   }
 
-  // const stats = {
-  //   total: userGrievances.length,
-  //   resolved: userGrievances.filter(g => g.status === 'Resolved').length,
-  //   inProgress: userGrievances.filter(g => g.status === 'In Progress').length,
-  //   pending: userGrievances.filter(g => g.status === 'Pending').length
-  // };
-
   const stats = {
     total: userGrievances.length,
-    resolved:5,
-    inProgress:7,
-    pending:0
+    resolved: userGrievances.filter(g => g.status === 'Resolved').length,
+    inProgress: userGrievances.filter(g => g.status === 'In Progress').length,
+    pending: userGrievances.filter(g => g.status === 'Pending').length
   };
 
   return (
@@ -176,6 +168,42 @@ const CitizenDashboard = () => {
           <div style={statsCardStyle}>
             <h3 style={{ fontSize: '14px', color: '#6c757d', marginBottom: '8px' }}>Pending</h3>
             <div style={{ fontSize: '28px', fontWeight: '700', color: '#dc3545' }}>{stats.pending}</div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div style={cardStyle}>
+          <h2 style={{ fontSize: 24, fontFamily: 'Roboto', fontWeight: 600, marginBottom: '20px' }}>
+            Quick Actions
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+            <button 
+              style={{ 
+                ...trackButtonStyle, 
+                width: '100%', 
+                padding: '15px', 
+                fontSize: '14px',
+                display: 'block',
+                textAlign: 'center'
+              }}
+              onClick={() => navigate('/submit')}
+            >
+              Submit New Grievance
+            </button>
+            {/* <button 
+              style={{ 
+                ...trackButtonStyle, 
+                width: '100%', 
+                padding: '15px', 
+                fontSize: '14px',
+                display: 'block',
+                textAlign: 'center',
+                backgroundColor: '#6c757d'
+              }}
+              onClick={() => navigate('/track')}
+            >
+              Track by ID
+            </button> */}
           </div>
         </div>
 
@@ -251,42 +279,6 @@ const CitizenDashboard = () => {
               ))}
             </div>
           )}
-        </div>
-
-        {/* Quick Actions */}
-        <div style={cardStyle}>
-          <h2 style={{ fontSize: 24, fontFamily: 'Roboto', fontWeight: 600, marginBottom: '20px' }}>
-            Quick Actions
-          </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-            <button 
-              style={{ 
-                ...trackButtonStyle, 
-                width: '100%', 
-                padding: '15px', 
-                fontSize: '14px',
-                display: 'block',
-                textAlign: 'center'
-              }}
-              onClick={() => navigate('/submit')}
-            >
-              Submit New Grievance
-            </button>
-            <button 
-              style={{ 
-                ...trackButtonStyle, 
-                width: '100%', 
-                padding: '15px', 
-                fontSize: '14px',
-                display: 'block',
-                textAlign: 'center',
-                backgroundColor: '#6c757d'
-              }}
-              onClick={() => navigate('/track')}
-            >
-              Track by ID
-            </button>
-          </div>
         </div>
       </div>
     </div>

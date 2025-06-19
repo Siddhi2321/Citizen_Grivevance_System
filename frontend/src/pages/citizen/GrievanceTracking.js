@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DetailBlock from '../../components/common/DetailBlock';
 import { pageContainer } from '../../styles/layout';
@@ -20,20 +20,44 @@ const ActionLink = ({ text, onClick }) => (
 const GrievanceTracking = () => {
   const { trackingId } = useParams();
   const navigate = useNavigate();
+  const [grievance, setGrievance] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - replace with actual fetch later
-  const grievance = {
-    id: trackingId,
-    date: 'May 25, 2025',
-    category: 'Sanitation',
-    description:
-      'The public sanitation facility is not maintained and has become a health concern.',
-    location: 'Dehu Phata, Alandi',
-    status: 'Under Review',
-    officer: 'Officer Hanumant Kakde',
-    lastUpdated: 'May 27, 2025',
-    resolution: 'May 31, 2025'
-  };
+  useEffect(() => {
+    const fetchGrievance = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/complaints/${trackingId}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          const g = data.complaint;
+          setGrievance({
+            id: g.grievanceId,
+            date: new Date(g.submittedAt).toLocaleDateString(),
+            category: g.category,
+            description: g.description,
+            location: `${g.location.addressLine}, ${g.location.city}`,
+            status: g.status,
+            officer: g.officer ? `${g.officer.name} (${g.officer.department})` : 'Not Assigned',
+            lastUpdated: new Date(g.updatedAt).toLocaleDateString(),
+            resolution: 'TBD', // You can update this when backend gives ETA
+          });
+        } else {
+          alert(data.message || 'Could not fetch grievance');
+        }
+      } catch (error) {
+        console.error('Error fetching grievance:', error);
+        alert('Error fetching grievance data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (trackingId) fetchGrievance();
+  }, [trackingId]);
+
+  if (loading) return <div style={{ padding: 40 }}>Loading grievance...</div>;
+  if (!grievance) return <div style={{ padding: 40 }}>Grievance not found.</div>;
 
   return (
     <div style={{
