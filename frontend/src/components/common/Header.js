@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { buttonStyle } from '../../styles/common';
 import MessagePopup from './MessagePopup';
+import {useEffect} from 'react';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -26,6 +27,46 @@ const Header = () => {
         setShowLogoutConfirm(false);
         navigate('/');
     };
+
+    useEffect(() => {
+    const validateSession = async () => {
+        const userType = localStorage.getItem('userType');
+        let endpoint = '';
+
+        if (userType === 'citizen') endpoint = '/api/citizen/session-check';
+        else if (userType === 'officer') endpoint = '/api/officer/session-check';
+        else if (userType === 'admin') endpoint = '/api/admin/session-check';
+        else return handleInvalidSession();
+
+        try {
+            const res = await fetch(`http://localhost:5000${endpoint}`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            if (res.status !== 200) {
+                handleInvalidSession();
+            }
+        } catch (err) {
+            console.error("Session check failed:", err);
+            handleInvalidSession();
+        }
+    };
+
+    const handleInvalidSession = () => {
+        localStorage.removeItem('userType');
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('citizenEmail');
+        localStorage.removeItem('officerEmail');
+        navigate('/');
+    };
+
+    if (isAuthenticated) {
+        validateSession();
+    }
+}, [navigate, isAuthenticated]);
 
     return (
         <div style={{

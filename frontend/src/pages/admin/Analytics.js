@@ -7,62 +7,70 @@ const AdminAnalytics = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  const fetchAnalytics = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/admin/dashboard", {
-        method: "GET",
-        credentials: "include",
-      });
-      const data = await res.json();
+    const fetchAnalytics = async () => {
+      try {
+        // Fetch dashboard metrics
+        const resDashboard = await fetch("http://localhost:5000/api/admin/dashboard", {
+          method: "GET",
+          credentials: "include",
+        });
+        const dashboardData = await resDashboard.json();
 
-      if (!res.ok) {
-        alert(data.message || "Failed to fetch analytics");
-        return;
-      }
-
-      // Manually patch remaining dummy fields for now
-      const extendedData = {
-        ...data,
-        averageResolutionTime: 3.8,
-        categoryBreakdown: [
-          { category: 'Infrastructure', count: 45, percentage: 29 },
-          { category: 'Sanitation', count: 38, percentage: 24 },
-          { category: 'Utilities', count: 32, percentage: 21 },
-          { category: 'Recreation', count: 25, percentage: 16 },
-          { category: 'Others', count: 16, percentage: 10 },
-        ],
-        officerPerformance: [
-          { name: 'Officer Smith', assigned: 25, resolved: 23, avgTime: 3.2 },
-          { name: 'Officer Brown', assigned: 22, resolved: 20, avgTime: 3.8 },
-          { name: 'Officer Davis', assigned: 18, resolved: 17, avgTime: 4.1 },
-          { name: 'Officer Wilson', assigned: 15, resolved: 14, avgTime: 3.5 },
-        ],
-        monthlyTrends: [
-          { month: 'Jan', submitted: 28, resolved: 25 },
-          { month: 'Feb', submitted: 32, resolved: 29 },
-          { month: 'Mar', submitted: 35, resolved: 31 },
-          { month: 'Apr', submitted: 30, resolved: 28 },
-          { month: 'May', submitted: 31, resolved: 29 },
-        ],
-        systemMetrics: {
-          responseTime: '1.8 days',
-          resolutionRate: '91%',
-          satisfactionScore: '4.3/5',
-          reopeningRate: '8%'
+        if (!resDashboard.ok) {
+          alert(dashboardData.message || "Failed to fetch analytics");
+          return;
         }
-      };
 
-      setAnalyticsData(extendedData);
-    } catch (err) {
-      console.error("Error fetching analytics:", err);
-      alert("Server error. Try again later.");
-    } finally {
-      setLoading(false);
-    }
-  };
+        // Fetch officer performance
+        const resOfficer = await fetch("http://localhost:5000/api/admin/officerPerformance", {
+          method: "GET",
+          credentials: "include",
+        });
+        const officerData = await resOfficer.json();
 
-  fetchAnalytics();
-}, []);
+        if (!resOfficer.ok) {
+          alert(officerData.message || "Failed to fetch officer performance");
+          return;
+        }
+
+        const extendedData = {
+          ...dashboardData,
+          averageResolutionTime: 3.8,
+          categoryBreakdown: [
+            { category: 'Infrastructure', count: 45, percentage: 29 },
+            { category: 'Sanitation', count: 38, percentage: 24 },
+            { category: 'Utilities', count: 32, percentage: 21 },
+            { category: 'Recreation', count: 25, percentage: 16 },
+            { category: 'Others', count: 16, percentage: 10 },
+          ],
+          officerPerformance: officerData.performance, // ✅ Fetched from backend
+          monthlyTrends: [
+            { month: 'Jan', submitted: 28, resolved: 25 },
+            { month: 'Feb', submitted: 32, resolved: 29 },
+            { month: 'Mar', submitted: 35, resolved: 31 },
+            { month: 'Apr', submitted: 30, resolved: 28 },
+            { month: 'May', submitted: 31, resolved: 29 },
+          ],
+          systemMetrics: {
+            responseTime: '1.8 days',
+            resolutionRate: '91%',
+            satisfactionScore: '4.3/5',
+            reopeningRate: '8%'
+          }
+        };
+
+        setAnalyticsData(extendedData);
+      } catch (err) {
+        console.error("Error fetching analytics:", err);
+        alert("Server error. Try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
+
 
   const metricCardStyle = {
     backgroundColor: 'white',
@@ -138,56 +146,180 @@ const AdminAnalytics = () => {
     <div style={pageContainer}>
       <Navigation />
       <div style={mainContentStyle}>
-        <h1 style={{ fontSize: 40, fontFamily: 'Roboto', fontWeight: 700, marginBottom: '10px' }}>
+        <h1
+          style={{
+            fontSize: 40,
+            fontFamily: "Roboto",
+            fontWeight: 700,
+            marginBottom: "10px",
+          }}
+        >
           System Analytics
         </h1>
-        <p style={{ fontSize: 16, color: '#6c757d', marginBottom: '30px' }}>
+        <p style={{ fontSize: 16, color: "#6c757d", marginBottom: "30px" }}>
           Comprehensive overview of grievance management system performance
         </p>
 
         {/* Key Metrics */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: "20px",
+            marginBottom: "30px",
+          }}
+        >
           <div style={metricCardStyle}>
-            <h3 style={{ fontSize: '14px', color: '#6c757d', marginBottom: '8px' }}>Total Grievances</h3>
-            <div style={{ fontSize: '32px', fontWeight: '700', color: '#007bff' }}>{analyticsData.totalGrievances}</div>
+            <h3
+              style={{
+                fontSize: "14px",
+                color: "#6c757d",
+                marginBottom: "8px",
+              }}
+            >
+              Total Grievances
+            </h3>
+            <div
+              style={{ fontSize: "32px", fontWeight: "700", color: "#007bff" }}
+            >
+              {analyticsData.totalGrievances}
+            </div>
           </div>
           <div style={metricCardStyle}>
-            <h3 style={{ fontSize: '14px', color: '#6c757d', marginBottom: '8px' }}>Resolved</h3>
-            <div style={{ fontSize: '32px', fontWeight: '700', color: '#28a745' }}>{analyticsData.resolved}</div>
+            <h3
+              style={{
+                fontSize: "14px",
+                color: "#6c757d",
+                marginBottom: "8px",
+              }}
+            >
+              Resolved
+            </h3>
+            <div
+              style={{ fontSize: "32px", fontWeight: "700", color: "#28a745" }}
+            >
+              {analyticsData.resolved}
+            </div>
           </div>
           <div style={metricCardStyle}>
-            <h3 style={{ fontSize: '14px', color: '#6c757d', marginBottom: '8px' }}>In Progress</h3>
-            <div style={{ fontSize: '32px', fontWeight: '700', color: '#ffc107' }}>{analyticsData.inProgress}</div>
+            <h3
+              style={{
+                fontSize: "14px",
+                color: "#6c757d",
+                marginBottom: "8px",
+              }}
+            >
+              In Progress
+            </h3>
+            <div
+              style={{ fontSize: "32px", fontWeight: "700", color: "#ffc107" }}
+            >
+              {analyticsData.inProgress}
+            </div>
           </div>
           <div style={metricCardStyle}>
-            <h3 style={{ fontSize: '14px', color: '#6c757d', marginBottom: '8px' }}>Pending</h3>
-            <div style={{ fontSize: '32px', fontWeight: '700', color: '#dc3545' }}>{analyticsData.pending}</div>
+            <h3
+              style={{
+                fontSize: "14px",
+                color: "#6c757d",
+                marginBottom: "8px",
+              }}
+            >
+              Pending
+            </h3>
+            <div
+              style={{ fontSize: "32px", fontWeight: "700", color: "#dc3545" }}
+            >
+              {analyticsData.pending}
+            </div>
           </div>
         </div>
 
         {/* System Performance Metrics */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+            gap: "20px",
+            marginBottom: "30px",
+          }}
+        >
           <div style={metricCardStyle}>
-            <h3 style={{ fontSize: '14px', color: '#6c757d', marginBottom: '8px' }}>Avg Resolution Time</h3>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#495057' }}>{analyticsData.averageResolutionTime} days</div>
+            <h3
+              style={{
+                fontSize: "14px",
+                color: "#6c757d",
+                marginBottom: "8px",
+              }}
+            >
+              Avg Resolution Time
+            </h3>
+            <div
+              style={{ fontSize: "24px", fontWeight: "700", color: "#495057" }}
+            >
+              {analyticsData.averageResolutionTime} days
+            </div>
           </div>
           <div style={metricCardStyle}>
-            <h3 style={{ fontSize: '14px', color: '#6c757d', marginBottom: '8px' }}>Response Time</h3>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#495057' }}>{analyticsData.systemMetrics.responseTime}</div>
+            <h3
+              style={{
+                fontSize: "14px",
+                color: "#6c757d",
+                marginBottom: "8px",
+              }}
+            >
+              Response Time
+            </h3>
+            <div
+              style={{ fontSize: "24px", fontWeight: "700", color: "#495057" }}
+            >
+              {analyticsData.systemMetrics.responseTime}
+            </div>
           </div>
           <div style={metricCardStyle}>
-            <h3 style={{ fontSize: '14px', color: '#6c757d', marginBottom: '8px' }}>Resolution Rate</h3>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#495057' }}>{analyticsData.systemMetrics.resolutionRate}</div>
+            <h3
+              style={{
+                fontSize: "14px",
+                color: "#6c757d",
+                marginBottom: "8px",
+              }}
+            >
+              Resolution Rate
+            </h3>
+            <div
+              style={{ fontSize: "24px", fontWeight: "700", color: "#495057" }}
+            >
+              {analyticsData.systemMetrics.resolutionRate}
+            </div>
           </div>
           <div style={metricCardStyle}>
-            <h3 style={{ fontSize: '14px', color: '#6c757d', marginBottom: '8px' }}>Satisfaction Score</h3>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#495057' }}>{analyticsData.systemMetrics.satisfactionScore}</div>
+            <h3
+              style={{
+                fontSize: "14px",
+                color: "#6c757d",
+                marginBottom: "8px",
+              }}
+            >
+              Satisfaction Score
+            </h3>
+            <div
+              style={{ fontSize: "24px", fontWeight: "700", color: "#495057" }}
+            >
+              {analyticsData.systemMetrics.satisfactionScore}
+            </div>
           </div>
         </div>
-        
+
         {/* Officer Performance */}
         <div style={chartContainerStyle}>
-          <h2 style={{ fontSize: 20, fontFamily: 'Roboto', fontWeight: 600, marginBottom: '20px' }}>
+          <h2
+            style={{
+              fontSize: 20,
+              fontFamily: "Roboto",
+              fontWeight: 600,
+              marginBottom: "20px",
+            }}
+          >
             Officer Performance
           </h2>
           <table style={tableStyle}>
@@ -203,13 +335,11 @@ const AdminAnalytics = () => {
             <tbody>
               {analyticsData.officerPerformance.map((officer, index) => (
                 <tr key={index}>
-                  <td style={tdStyle}>{officer.name}</td>
+                  <td style={tdStyle}>{officer.officerName}</td>
                   <td style={tdStyle}>{officer.assigned}</td>
                   <td style={tdStyle}>{officer.resolved}</td>
-                  <td style={tdStyle}>
-                    {Math.round((officer.resolved / officer.assigned) * 100)}%
-                  </td>
-                  <td style={tdStyle}>{officer.avgTime} days</td>
+                  <td style={tdStyle}>{officer.resolutionRate}</td>
+                  <td style={tdStyle}>{officer.avgResolutionTime}</td>
                 </tr>
               ))}
             </tbody>
@@ -218,17 +348,46 @@ const AdminAnalytics = () => {
 
         {/* Monthly Trends */}
         <div style={chartContainerStyle}>
-          <h2 style={{ fontSize: 20, fontFamily: 'Roboto', fontWeight: 600, marginBottom: '20px' }}>
+          <h2
+            style={{
+              fontSize: 20,
+              fontFamily: "Roboto",
+              fontWeight: 600,
+              marginBottom: "20px",
+            }}
+          >
             Monthly Trends
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '16px' }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+              gap: "16px",
+            }}
+          >
             {analyticsData.monthlyTrends.map((trend, index) => (
-              <div key={index} style={{ textAlign: 'center', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
-                <div style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>{trend.month}</div>
-                <div style={{ fontSize: '14px', color: '#6c757d' }}>
+              <div
+                key={index}
+                style={{
+                  textAlign: "center",
+                  padding: "16px",
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "6px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    marginBottom: "8px",
+                  }}
+                >
+                  {trend.month}
+                </div>
+                <div style={{ fontSize: "14px", color: "#6c757d" }}>
                   Submitted: {trend.submitted}
                 </div>
-                <div style={{ fontSize: '14px', color: '#6c757d' }}>
+                <div style={{ fontSize: "14px", color: "#6c757d" }}>
                   Resolved: {trend.resolved}
                 </div>
               </div>
@@ -238,26 +397,105 @@ const AdminAnalytics = () => {
 
         {/* Additional Metrics */}
         <div style={chartContainerStyle}>
-          <h2 style={{ fontSize: 20, fontFamily: 'Roboto', fontWeight: 600, marginBottom: '20px' }}>
+          <h2
+            style={{
+              fontSize: 20,
+              fontFamily: "Roboto",
+              fontWeight: 600,
+              marginBottom: "20px",
+            }}
+          >
             Additional Metrics
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-            <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
-              <div style={{ fontSize: '18px', fontWeight: '600', marginBottom: '5px' }}>Reopening Rate</div>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: '#dc3545' }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gap: "20px",
+            }}
+          >
+            <div
+              style={{
+                textAlign: "center",
+                padding: "20px",
+                backgroundColor: "#f8f9fa",
+                borderRadius: "6px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  marginBottom: "5px",
+                }}
+              >
+                Reopening Rate
+              </div>
+              <div
+                style={{
+                  fontSize: "24px",
+                  fontWeight: "700",
+                  color: "#dc3545",
+                }}
+              >
                 {analyticsData.systemMetrics.reopeningRate}
               </div>
             </div>
-            <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
-              <div style={{ fontSize: '18px', fontWeight: '600', marginBottom: '5px' }}>Active Officers</div>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: '#007bff' }}>
+            <div
+              style={{
+                textAlign: "center",
+                padding: "20px",
+                backgroundColor: "#f8f9fa",
+                borderRadius: "6px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  marginBottom: "5px",
+                }}
+              >
+                Active Officers
+              </div>
+              <div
+                style={{
+                  fontSize: "24px",
+                  fontWeight: "700",
+                  color: "#007bff",
+                }}
+              >
                 {analyticsData.officerPerformance.length}
               </div>
             </div>
-            <div style={{ textAlign: 'center', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
-              <div style={{ fontSize: '18px', fontWeight: '600', marginBottom: '5px' }}>Avg per Officer</div>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: '#28a745' }}>
-                {Math.round(analyticsData.totalGrievances / analyticsData.officerPerformance.length)}
+            <div
+              style={{
+                textAlign: "center",
+                padding: "20px",
+                backgroundColor: "#f8f9fa",
+                borderRadius: "6px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  marginBottom: "5px",
+                }}
+              >
+                Avg per Officer
+              </div>
+              <div
+                style={{
+                  fontSize: "24px",
+                  fontWeight: "700",
+                  color: "#28a745",
+                }}
+              >
+                {Math.round(
+                  analyticsData.totalGrievances /
+                    analyticsData.officerPerformance.length
+                )}
               </div>
             </div>
           </div>

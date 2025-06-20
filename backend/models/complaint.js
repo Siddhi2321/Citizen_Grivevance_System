@@ -61,9 +61,14 @@ const complaintSchema = new mongoose.Schema({
   },
   logs: [
     {
-      action: { type: String },
+      status: { type: String },
       message: { type: String },
-      by: { type: String },
+      by: { type: String },//officer ID
+      officerName: { type: String },
+      attachments: [{
+         fileUrl: { type: String },
+         fileType: { type: String },
+      }],
       timestamp: { type: Date, default: Date.now }
     }
   ],

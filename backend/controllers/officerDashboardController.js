@@ -38,7 +38,7 @@ exports.getOfficerGrievances = async (req, res) => {
         phone: c.citizenId.phone
       } : null,
       evidence: c.attachments || [],
-      updates: c.logs || []
+      logs: c.logs || []
     }));
 
     res.status(200).json({ grievances: formattedGrievances });
@@ -88,7 +88,7 @@ exports.getGrievanceDetails = async (req, res) => {
       assignedDate: complaint.updatedAt,
       citizen: complaint.contactInfo.email ,
       evidence: complaint.attachments || [],
-      updates: complaint.logs || []
+      logs: complaint.logs || []
     };
 
     res.status(200).json({ grievance: grievanceDetails });
@@ -145,7 +145,7 @@ exports.updateGrievanceStatus = async (req, res) => {
   try {
     const officerEmail = req.session.officer?.email;
     const { grievanceId } = req.params;
-    const { status, notes } = req.body;
+    const { nstatus, notes } = req.body;
 
     if (!officerEmail) return res.status(401).json({ message: 'Unauthorized' });
 
@@ -155,13 +155,16 @@ exports.updateGrievanceStatus = async (req, res) => {
     const complaint = await Complaint.findOneAndUpdate(
       { grievanceId, officerId: officer._id },
       {
-        status,
+        $set: {
+          status: nstatus,
+          updatedAt: new Date()
+        },
         $push: {
           logs: {
-            date: new Date(),
-            status,
-            notes,
-            officer: officer.name
+            status: nstatus.toLowerCase(),
+            message: notes,
+            by: officer.name,
+            timestamp: new Date()
           }
         }
       },
@@ -176,6 +179,7 @@ exports.updateGrievanceStatus = async (req, res) => {
   }
 };
 
+
 exports.uploadEvidence = async (req, res) => {
   try {
     const officerEmail = req.session.officer?.email;
@@ -187,22 +191,22 @@ exports.uploadEvidence = async (req, res) => {
     const officer = await Officer.findOne({ email: officerEmail });
     if (!officer) return res.status(404).json({ message: 'Officer not found' });
 
-    // const uploaded = await cloudinary.uploader.upload(file.path);
+    const uploaded = await cloudinary.uploader.upload(file.path);
 
-    // const complaint = await Complaint.findOneAndUpdate(
-    //   { grievanceId, officerId: officer._id },
-    //   {
-    //     $push: {
-    //       attachments: {
-    //         fileUrl: uploaded.secure_url,
-    //         fileType: uploaded.resource_type + '/' + uploaded.format,
-    //         uploadedBy: officer.name,
-    //         uploadedAt: new Date()
-    //       }
-    //     }
-    //   },
-    //   { new: true }
-    // );
+    const complaint = await Complaint.findOneAndUpdate(
+      { grievanceId, officerId: officer._id },
+      {
+        $push: {
+          attachments: {
+            fileUrl: uploaded.secure_url,
+            fileType: uploaded.resource_type + '/' + uploaded.format,
+            uploadedBy: officer.name,
+            uploadedAt: new Date()
+          }
+        }
+      },
+      { new: true }
+    );
 
     if (!complaint) return res.status(404).json({ message: 'Not assigned' });
     res.json({ message: 'Evidence submitted', grievance: complaint });
@@ -212,3 +216,61 @@ exports.uploadEvidence = async (req, res) => {
   }
 };
 
+
+//updated submit update
+exports.submitGrievanceUpdate = async (req, res) => {
+  try {
+    const officerEmail = req.session.officer?.email;
+    const { grievanceId } = req.params;
+    const { nstatus, notes } = req.body;
+    const file = req.file;
+
+    if (!officerEmail || !grievanceId || !nstatus || !notes) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    const officer = await Officer.findOne({ email: officerEmail });
+    if (!officer) {
+      return res.status(404).json({ message: 'Officer not found' });
+    }
+
+    let attachments = [];
+
+    if (file) {
+      const uploaded = await cloudinary.uploader.upload(file.path);
+      attachments.push({
+        fileUrl: uploaded.secure_url,
+        fileType: `${uploaded.resource_type}/${uploaded.format}`
+      });
+    }
+
+    const updatedComplaint = await Complaint.findOneAndUpdate(
+      { grievanceId, officerId: officer._id },
+      {
+        status: nstatus,
+        $push: {
+          logs: {
+            status: nstatus,
+            officerName: officer.name,
+            message: notes,
+            by: officer._id.toString(), // storing officer ID as string
+            attachments: attachments,
+            timestamp: new Date()
+          }
+        },
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!updatedComplaint) {
+      return res.status(404).json({ message: 'Complaint not found or not assigned to officer' });
+    }
+
+    res.status(200).json({ message: 'Update submitted successfully', grievance: updatedComplaint });
+
+  } catch (err) {
+    console.error('Submit grievance update error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};

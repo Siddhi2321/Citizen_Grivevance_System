@@ -53,10 +53,6 @@ exports.loginAdmin = async (req, res) => {
 };
 
 
-exports.manageOfficers = async (req, res) => {
-
-}
-
 exports.dashboardStats = async (req, res) => {
   try {
     const department = req.session.admin?.department;
@@ -161,58 +157,7 @@ exports.assignOfficerToComplaint = async (req, res) => {
   }
 };
 
-exports.getOfficerPerformance = async (req, res) => {
-  try {
-    const department = req.session.admin?.department;
 
-    if (!department) {
-      return res.status(401).json({ message: "Unauthorized: Admin not logged in" });
-    }
-
-    // Get all officers of this department
-    const officers = await Officer.find({ department });
-
-    // If no officers found
-    if (officers.length === 0) {
-      return res.status(200).json({ officerPerformance: [] });
-    }
-
-    // Get all complaints of this department
-    const complaints = await Complaint.find({ department });
-
-    // Prepare performance data
-    const performance = officers.map(officer => {
-      const assigned = complaints.filter(c => c.officerId?.toString() === officer._id.toString());
-      const resolved = assigned.filter(c => c.status === 'resolved');
-
-      const avgTime = resolved.length > 0
-        ? (
-            resolved.reduce((sum, comp) => {
-              const submitted = new Date(comp.submittedAt).getTime();
-              const updated = new Date(comp.updatedAt).getTime();
-              const duration = (updated - submitted) / (1000 * 60 * 60 * 24); // in days
-              return sum + duration;
-            }, 0) / resolved.length
-          ).toFixed(1)
-        : 0;
-
-      return {
-        name: officer.name,
-        assigned: assigned.length,
-        resolved: resolved.length,
-        avgTime: parseFloat(avgTime)
-      };
-    });
-
-    res.status(200).json({ officerPerformance: performance });
-  } catch (error) {
-    console.error("Error in getOfficerPerformance:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
-
-// //officer performance
 // exports.getOfficerPerformance = async (req, res) => {
 //   try {
 //     const department = req.session.admin?.department;
@@ -220,38 +165,90 @@ exports.getOfficerPerformance = async (req, res) => {
 //     if (!department) {
 //       return res.status(401).json({ message: "Unauthorized: Admin not logged in" });
 //     }
+
+//     // Get all officers of this department
 //     const officers = await Officer.find({ department });
 
-//     const performanceData = await Promise.all(
-//       officers.map(async (officer) => {
-//         const assignedComplaints = await Complaint.find({ officerId: officer._id });
+//     // If no officers found
+//     if (officers.length === 0) {
+//       return res.status(200).json({ officerPerformance: [] });
+//     }
 
-//         const resolvedComplaints = assignedComplaints.filter(c => c.status === 'resolved');
+//     // Get all complaints of this department
+//     const complaints = await Complaint.find({ department });
 
-//         const resolutionRate = assignedComplaints.length > 0
-//           ? ((resolvedComplaints.length / assignedComplaints.length) * 100).toFixed(0)
-//           : '0';
+//     // Prepare performance data
+//     const performance = officers.map(officer => {
+//       const assigned = complaints.filter(c => c.officerId?.toString() === officer._id.toString());
+//       const resolved = assigned.filter(c => c.status === 'resolved');
 
-//         const avgResolutionTimeInMs = resolvedComplaints.reduce((sum, complaint) => {
-//           return sum + (new Date(complaint.updatedAt) - new Date(complaint.submittedAt));
-//         }, 0) / (resolvedComplaints.length || 1);
+//       const avgTime = resolved.length > 0
+//         ? (
+//             resolved.reduce((sum, comp) => {
+//               const submitted = new Date(comp.submittedAt).getTime();
+//               const updated = new Date(comp.updatedAt).getTime();
+//               const duration = (updated - submitted) / (1000 * 60 * 60 * 24); // in days
+//               return sum + duration;
+//             }, 0) / resolved.length
+//           ).toFixed(1)
+//         : 0;
 
-//         const avgResolutionTime = (avgResolutionTimeInMs / (1000 * 60 * 60 * 24)).toFixed(1);
+//       return {
+//         name: officer.name,
+//         assigned: assigned.length,
+//         resolved: resolved.length,
+//         avgTime: parseFloat(avgTime)
+//       };
+//     });
 
-//         return {
-//           officerName: officer.name,
-//           assigned: assignedComplaints.length,
-//           resolved: resolvedComplaints.length,
-//           resolutionRate: `${resolutionRate}%`,
-//           avgResolutionTime: `${avgResolutionTime} days`
-//         };
-//       })
-//     );
-
-//     res.status(200).json({ performance: performanceData });
-
+//     res.status(200).json({ officerPerformance: performance });
 //   } catch (error) {
-//     console.error("Error fetching officer performance:", error);
+//     console.error("Error in getOfficerPerformance:", error);
 //     res.status(500).json({ message: "Server error", error: error.message });
 //   }
 // };
+
+
+// //officer performance
+exports.getOfficerPerformance = async (req, res) => {
+  try {
+    const department = req.session.admin?.department;
+
+    if (!department) {
+      return res.status(401).json({ message: "Unauthorized: Admin not logged in" });
+    }
+    const officers = await Officer.find({ department });
+
+    const performanceData = await Promise.all(
+      officers.map(async (officer) => {
+        const assignedComplaints = await Complaint.find({ officerId: officer._id });
+
+        const resolvedComplaints = assignedComplaints.filter(c => c.status === 'resolved');
+
+        const resolutionRate = assignedComplaints.length > 0
+          ? ((resolvedComplaints.length / assignedComplaints.length) * 100).toFixed(0)
+          : '0';
+
+        const avgResolutionTimeInMs = resolvedComplaints.reduce((sum, complaint) => {
+          return sum + (new Date(complaint.updatedAt) - new Date(complaint.submittedAt));
+        }, 0) / (resolvedComplaints.length || 1);
+
+        const avgResolutionTime = (avgResolutionTimeInMs / (1000 * 60 * 60 * 24)).toFixed(1);
+
+        return {
+          officerName: officer.name,
+          assigned: assignedComplaints.length,
+          resolved: resolvedComplaints.length,
+          resolutionRate: `${resolutionRate}%`,
+          avgResolutionTime: `${avgResolutionTime} days`
+        };
+      })
+    );
+
+    res.status(200).json({ performance: performanceData });
+
+  } catch (error) {
+    console.error("Error fetching officer performance:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

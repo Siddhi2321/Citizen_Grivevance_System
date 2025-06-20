@@ -37,6 +37,8 @@ const OfficerDashboard = () => {
     fetchGrievances();
   }, []);
 
+  
+
   const handleViewDetails = (grievanceId) => {
     // Navigate to grievance details page
     navigate(`/officer/grievance/${grievanceId}`);
@@ -189,7 +191,8 @@ const OfficerDashboard = () => {
                     </td>
                     <td style={tdStyle}>
                       <span style={statusStyle(grievance.status)}>
-                        {grievance.status}
+                       
+                        {grievance.status === 'in_progress' ? 'In Progress' : grievance.status}
                       </span>
                     </td>
                     <td style={tdStyle}>

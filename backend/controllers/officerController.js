@@ -2,6 +2,7 @@ const Officer = require("../models/officer");
 const { sendEmail } = require("../utils/sendEmail");
 const Admin = require("../models/admin");
 const bcrypt = require("bcrypt");
+const admin = require("../models/admin");
 
 exports.sendOtpToOfficer = async (req, res, next) => {
   const { email } = req.body;
@@ -130,6 +131,7 @@ exports.loginOfficerOrAdmin = async (req, res) => {
     const sessionData = {
       email: user.email,
       department:user.department,
+      role:'admin',
       loginTime: new Date(),
     };
 
@@ -139,6 +141,7 @@ exports.loginOfficerOrAdmin = async (req, res) => {
       req.session.admin = {
       email: user.email,
       department: user.department,
+      role:'officer',
       loginTime: Date.now()
       };
     } 

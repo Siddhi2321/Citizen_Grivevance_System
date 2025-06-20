@@ -59,6 +59,7 @@ const verifyOtp = async (req, res) => {
     req.session.user = {
       citizen_id: user.citizen_id,
       email: user.email,
+      role:'citizen',
       loginTime: now
     };
 

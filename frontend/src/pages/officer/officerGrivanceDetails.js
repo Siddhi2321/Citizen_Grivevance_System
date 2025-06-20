@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { pageContainer, mainContentStyle } from '../../styles/layout';
+import { useNavigate  } from 'react-router-dom';
 import Navigation from '../../components/common/Navigation';
 
 const OfficerGrievanceDetails = () => {
+  const navigate = useNavigate();
  const { grievanceId } = useParams();
   const [grievance, setGrievance] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -22,6 +24,7 @@ const OfficerGrievanceDetails = () => {
 
         if (res.ok) setGrievance(data.grievance);
         else alert(data.message || "Failed to fetch details");
+        console.log("Grievance details fetched:", data.grievance);
       } catch (err) {
         console.error("Fetch error:", err);
         alert("Server error fetching details.");
@@ -37,56 +40,51 @@ const OfficerGrievanceDetails = () => {
     setEvidenceFile(e.target.files[0]);
   };
 
-  const handleSubmitUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch(`http://localhost:5000/api/officer/grievance/${grievanceId}/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ status: updateStatus, notes: updateNotes })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert("Status updated successfully");
-        setGrievance(data.grievance);
-      } else {
-        alert(data.message || "Failed to update status");
-      }
-    } catch (error) {
-      console.error("Update error:", error);
-      alert("Server error during status update.");
-    }
-    setUpdateStatus('');
-    setUpdateNotes('');
-  };
+  const handleCombinedSubmit = async (e) => {
+  e.preventDefault();
 
-  const handleSubmitEvidence = async (e) => {
-    e.preventDefault();
-    if (!evidenceFile) return;
+  if (updateStatus === "resolved" && !evidenceFile) {
+    alert("Please upload evidence when status is set to Resolved.");
+    return;
+  }
 
-    const formData = new FormData();
+  const formData = new FormData();
+  formData.append("nstatus", updateStatus);
+  formData.append("notes", updateNotes);
+  if (evidenceFile) {
     formData.append("file", evidenceFile);
+  }
 
-    try {
-      const res = await fetch(`http://localhost:5000/api/officer/grievance/${grievanceId}/evidence`, {
+  try {
+    const res = await fetch(
+      `http://localhost:5000/api/officer/submitUpdate/${grievanceId}`,
+      {
         method: "POST",
         credentials: "include",
         body: formData
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert("Evidence uploaded successfully");
-        setGrievance(data.grievance);
-      } else {
-        alert(data.message || "Failed to upload evidence");
       }
-    } catch (err) {
-      console.error("Evidence upload error:", err);
-      alert("Server error during evidence upload.");
+    );
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("Update submitted successfully");
+      setGrievance(data.grievance);
+      navigate("/officer/dashboard");
+    } else {
+      alert(data.message || "Failed to submit update");
     }
-    setEvidenceFile(null);
-  };
+  } catch (err) {
+    console.error("Combined submit error:", err);
+    alert("Server error during update.");
+  }
+
+  // Reset
+  setUpdateStatus("");
+  setUpdateNotes("");
+  setEvidenceFile(null);
+};
+
   const cardStyle = {
     backgroundColor: 'white',
     padding: '24px',
@@ -387,69 +385,84 @@ const OfficerGrievanceDetails = () => {
         </div>
 
         {/* Status Updates */}
-        <div style={cardStyle}>
-          <h2
+<div style={cardStyle}>
+  <h2
+    style={{
+      fontSize: 20,
+      fontFamily: "Roboto",
+      fontWeight: 600,
+      marginBottom: "20px",
+    }}
+  >
+    Status Updates
+  </h2>
+  <div style={{ marginBottom: "20px" }}>
+    {grievance?.logs && grievance.logs.length > 0 ? (
+      grievance.logs.map((log, index) => (
+        <div
+          key={index}
+          style={{
+            padding: "15px",
+            border: "1px solid #dee2e6",
+            borderRadius: "6px",
+            marginBottom: "10px",
+            backgroundColor: "#f8f9fa",
+          }}
+        >
+          <div
             style={{
-              fontSize: 20,
-              fontFamily: "Roboto",
-              fontWeight: 600,
-              marginBottom: "20px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "8px",
             }}
           >
-            Status Updates
-          </h2>
-          <div style={{ marginBottom: "20px" }}>
-            {grievance?.updates && grievance.updates.length > 0 ? (
-              grievance.updates.map((update, index) => (
-                <div
-                  key={index}
-                  style={{
-                    padding: "15px",
-                    border: "1px solid #dee2e6",
-                    borderRadius: "6px",
-                    marginBottom: "10px",
-                    backgroundColor: "#f8f9fa",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "8px",
-                    }}
-                  >
-                    <span style={{ fontSize: "14px", fontWeight: "500" }}>
-                      {update.officer}
-                    </span>
-                    <span style={{ fontSize: "12px", color: "#6c757d" }}>
-                      {new Date(update.date).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <span style={statusStyle(update.status)}>
-                    {update.status}
-                  </span>
-                  <p
-                    style={{
-                      fontSize: "14px",
-                      color: "#495057",
-                      marginTop: "8px",
-                    }}
-                  >
-                    {update.notes}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <p style={{ fontSize: "14px", color: "#6c757d" }}>
-                No status updates yet.
-              </p>
-            )}
+            <span style={{ fontSize: "14px", fontWeight: "500" }}>
+              {log.officerName}
+            </span>
+            <span style={{ fontSize: "12px", color: "#6c757d" }}>
+              {new Date(log.timestamp).toLocaleDateString()}
+            </span>
           </div>
+          {log.status && (
+            <span style={statusStyle(log.status)}>{log.status}</span>
+          )}
+          {log.message && (
+            <p
+              style={{
+                fontSize: "14px",
+                color: "#495057",
+                marginTop: "8px",
+              }}
+            >
+              {log.message}
+            </p>
+          )}
+          {log.attachments && log.attachments.length > 0 && (
+            <div style={{ marginTop: "10px" }}>
+              <strong>Attachments:</strong>
+              <ul>
+                {log.attachments.map((att, idx) => (
+                  <li key={idx}>
+                    <a href={att.fileUrl} target="_blank" rel="noreferrer">
+                      {att.fileType.split("/")[1] || "File"}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
+      ))
+    ) : (
+      <p style={{ fontSize: "14px", color: "#6c757d" }}>
+        No status updates yet.
+      </p>
+    )}
+  </div>
+</div>
 
-        {/* Add Status Update */}
-        <div style={cardStyle}>
+        <form onSubmit={handleCombinedSubmit} style={{ ...cardStyle }}>
           <h2
             style={{
               fontSize: 20,
@@ -460,88 +473,78 @@ const OfficerGrievanceDetails = () => {
           >
             Add Status Update
           </h2>
-          <form onSubmit={handleSubmitUpdate}>
-            <div style={{ marginBottom: "15px" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "5px",
-                  fontWeight: "500",
-                }}
-              >
-                Status:
-              </label>
-              <select
-                value={updateStatus}
-                onChange={(e) => setUpdateStatus(e.target.value)}
-                style={inputStyle}
-                required
-              >
-                <option value="">Select Status</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Resolved">Resolved</option>
-                <option value="Pending">Pending</option>
-              </select>
-            </div>
-            <div style={{ marginBottom: "15px" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "5px",
-                  fontWeight: "500",
-                }}
-              >
-                Notes:
-              </label>
-              <textarea
-                value={updateNotes}
-                onChange={(e) => setUpdateNotes(e.target.value)}
-                style={textareaStyle}
-                placeholder="Add update notes..."
-                required
-              />
-            </div>
-            <button type="submit" style={buttonStyle}>
-              Submit Update
-            </button>
-          </form>
-        </div>
 
-        {/* Submit Evidence */}
-        <div style={cardStyle}>
-          <h2
-            style={{
-              fontSize: 20,
-              fontFamily: "Roboto",
-              fontWeight: 600,
-              marginBottom: "20px",
-            }}
-          >
-            Submit Evidence
-          </h2>
-          <form onSubmit={handleSubmitEvidence}>
-            <div style={{ marginBottom: "15px" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "5px",
-                  fontWeight: "500",
-                }}
-              >
-                Upload File:
-              </label>
-              <input
-                type="file"
-                onChange={handleFileChange}
-                accept="image/*,.pdf,.doc,.docx"
-                style={inputStyle}
-              />
-            </div>
-            <button type="submit" style={buttonStyle} disabled={!evidenceFile}>
-              Submit Evidence
-            </button>
-          </form>
-        </div>
+          {/* Status Selection */}
+          <div style={{ marginBottom: "15px" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "5px",
+                fontWeight: "500",
+              }}
+            >
+              Status:
+            </label>
+            <select
+              value={updateStatus}
+              onChange={(e) => setUpdateStatus(e.target.value)}
+              style={inputStyle}
+              required
+            >
+              <option value="">Select Status</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+            </select>
+          </div>
+
+          {/* Notes */}
+          <div style={{ marginBottom: "15px" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "5px",
+                fontWeight: "500",
+              }}
+            >
+              Notes:
+            </label>
+            <textarea
+              value={updateNotes}
+              onChange={(e) => setUpdateNotes(e.target.value)}
+              style={textareaStyle}
+              placeholder="Add update notes..."
+              required
+            />
+          </div>
+
+          {/* Evidence Upload */}
+          <div style={{ marginBottom: "15px" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "5px",
+                fontWeight: "500",
+              }}
+            >
+              Upload Evidence{" "}
+              {updateStatus === "resolved" && (
+                <span style={{ color: "red" }}>*</span>
+              )}
+            </label>
+            <input
+              type="file"
+              onChange={handleFileChange}
+              accept="image/*,.pdf,.doc,.docx"
+              style={inputStyle}
+              required={updateStatus === "resolved"}
+            />
+          </div>
+
+          {/* Submit Button */}
+          <button type="submit" style={buttonStyle}>
+            Submit Update
+          </button>
+        </form>
       </div>
     </div>
   );

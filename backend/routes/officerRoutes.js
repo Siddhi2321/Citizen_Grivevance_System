@@ -23,4 +23,7 @@ router.post('/grievance/:grievanceId/evidence', requireOfficerSession, upload.si
 
 router.get('/stats', requireOfficerSession, officerDashboard.getOfficerComplaintStats); 
 
+router.post('/submitUpdate/:grievanceId', requireOfficerSession, upload.single('file'), officerDashboard.submitGrievanceUpdate);
+
+
 module.exports = router;

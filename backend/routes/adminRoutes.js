@@ -17,7 +17,7 @@ router.get('/get-officers', requireAdminSession, adminController.getDepartmentOf
 router.post('/assign', requireAdminSession, adminController.assignOfficerToComplaint);
 
 //officer performance
-router.get('/officer-performance', requireAdminSession, adminController.getOfficerPerformance);
+router.get('/officerPerformance', requireAdminSession, adminController.getOfficerPerformance);
 // router.get('/dashboard/officer-performance', officerDashboard.getOfficerPerformance);
 
 

@@ -130,7 +130,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/citizen/login" element={<CitizenLogin />} />
         <Route path="/officer/login" element={<OfficerLogin />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
+        {/* <Route path="/admin/login" element={<AdminLogin />} /> */}
         <Route path="/submit" element={<GrievanceSubmission />} />
         <Route path="/track/:trackingId" element={<GrievanceTracking />} />
         
