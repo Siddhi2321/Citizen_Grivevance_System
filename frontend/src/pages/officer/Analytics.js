@@ -7,14 +7,23 @@ const OfficerAnalytics = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call with dummy data
-    setTimeout(() => {
-      const dummyData = {
-        totalAssigned: 15,
-        resolved: 8,
-        inProgress: 4,
-        pending: 3,
-        averageResolutionTime: 4.2,
+     const fetchOfficerStats = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/officer/stats", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to fetch officer stats");
+        return;
+      }
+
+      const extendedData = {
+        ...data,
+        averageResolutionTime: 4.2, // dummy for now
         categoryBreakdown: [
           { category: 'Infrastructure', count: 6, percentage: 40 },
           { category: 'Sanitation', count: 4, percentage: 27 },
@@ -32,9 +41,17 @@ const OfficerAnalytics = () => {
           satisfactionScore: '4.2/5'
         }
       };
-      setAnalyticsData(dummyData);
+
+      setAnalyticsData(extendedData);
+    } catch (err) {
+      console.error("Error fetching officer analytics:", err);
+      alert("Server error. Try again later.");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
+  };
+
+  fetchOfficerStats();
   }, []);
 
   const metricCardStyle = {
@@ -107,7 +124,7 @@ const OfficerAnalytics = () => {
           </div>
           <div style={metricCardStyle}>
             <h3 style={{ fontSize: '14px', color: '#6c757d', marginBottom: '8px' }}>In Progress</h3>
-            <div style={{ fontSize: '32px', fontWeight: '700', color: '#ffc107' }}>{analyticsData.inProgress}</div>
+            <div style={{ fontSize: '32px', fontWeight: '700', color: '#ffc107' }}>{analyticsData.in_progress}</div>
           </div>
           <div style={metricCardStyle}>
             <h3 style={{ fontSize: '14px', color: '#6c757d', marginBottom: '8px' }}>Pending</h3>
@@ -133,24 +150,6 @@ const OfficerAnalytics = () => {
             <h3 style={{ fontSize: '14px', color: '#6c757d', marginBottom: '8px' }}>Satisfaction Score</h3>
             <div style={{ fontSize: '24px', fontWeight: '700', color: '#495057' }}>{analyticsData.performanceMetrics.satisfactionScore}</div>
           </div>
-        </div>
-
-        {/* Category Breakdown */}
-        <div style={chartContainerStyle}>
-          <h2 style={{ fontSize: 20, fontFamily: 'Roboto', fontWeight: 600, marginBottom: '20px' }}>
-            Grievances by Category
-          </h2>
-          {analyticsData.categoryBreakdown.map((item, index) => (
-            <div key={index} style={{ marginBottom: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '14px', fontWeight: '500' }}>{item.category}</span>
-                <span style={{ fontSize: '14px', color: '#6c757d' }}>{item.count} grievances</span>
-              </div>
-              <div style={progressBarStyle(item.percentage)}>
-                <div style={progressFillStyle(item.percentage)}></div>
-              </div>
-            </div>
-          ))}
         </div>
 
         {/* Monthly Trends */}

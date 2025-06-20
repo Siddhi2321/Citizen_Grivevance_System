@@ -18,6 +18,7 @@ router.post('/assign', requireAdminSession, adminController.assignOfficerToCompl
 
 //officer performance
 router.get('/officer-performance', requireAdminSession, adminController.getOfficerPerformance);
+// router.get('/dashboard/officer-performance', officerDashboard.getOfficerPerformance);
 
 
 module.exports = router;

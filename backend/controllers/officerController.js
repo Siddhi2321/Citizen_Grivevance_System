@@ -129,8 +129,8 @@ exports.loginOfficerOrAdmin = async (req, res) => {
 
     const sessionData = {
       email: user.email,
+      department:user.department,
       loginTime: new Date(),
-      role: userType,
     };
 
     // Store session accordingly

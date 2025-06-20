@@ -7,33 +7,42 @@ const AdminAnalytics = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call with dummy data
-    setTimeout(() => {
-      const dummyData = {
-        totalGrievances: 156,
-        resolved: 142,
-        inProgress: 11,
-        pending: 3,
+  const fetchAnalytics = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/admin/dashboard", {
+        method: "GET",
+        credentials: "include",
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Failed to fetch analytics");
+        return;
+      }
+
+      // Manually patch remaining dummy fields for now
+      const extendedData = {
+        ...data,
         averageResolutionTime: 3.8,
         categoryBreakdown: [
           { category: 'Infrastructure', count: 45, percentage: 29 },
           { category: 'Sanitation', count: 38, percentage: 24 },
           { category: 'Utilities', count: 32, percentage: 21 },
           { category: 'Recreation', count: 25, percentage: 16 },
-          { category: 'Others', count: 16, percentage: 10 }
+          { category: 'Others', count: 16, percentage: 10 },
         ],
         officerPerformance: [
           { name: 'Officer Smith', assigned: 25, resolved: 23, avgTime: 3.2 },
           { name: 'Officer Brown', assigned: 22, resolved: 20, avgTime: 3.8 },
           { name: 'Officer Davis', assigned: 18, resolved: 17, avgTime: 4.1 },
-          { name: 'Officer Wilson', assigned: 15, resolved: 14, avgTime: 3.5 }
+          { name: 'Officer Wilson', assigned: 15, resolved: 14, avgTime: 3.5 },
         ],
         monthlyTrends: [
           { month: 'Jan', submitted: 28, resolved: 25 },
           { month: 'Feb', submitted: 32, resolved: 29 },
           { month: 'Mar', submitted: 35, resolved: 31 },
           { month: 'Apr', submitted: 30, resolved: 28 },
-          { month: 'May', submitted: 31, resolved: 29 }
+          { month: 'May', submitted: 31, resolved: 29 },
         ],
         systemMetrics: {
           responseTime: '1.8 days',
@@ -42,10 +51,18 @@ const AdminAnalytics = () => {
           reopeningRate: '8%'
         }
       };
-      setAnalyticsData(dummyData);
+
+      setAnalyticsData(extendedData);
+    } catch (err) {
+      console.error("Error fetching analytics:", err);
+      alert("Server error. Try again later.");
+    } finally {
       setLoading(false);
-    }, 1500);
-  }, []);
+    }
+  };
+
+  fetchAnalytics();
+}, []);
 
   const metricCardStyle = {
     backgroundColor: 'white',
@@ -167,25 +184,7 @@ const AdminAnalytics = () => {
             <div style={{ fontSize: '24px', fontWeight: '700', color: '#495057' }}>{analyticsData.systemMetrics.satisfactionScore}</div>
           </div>
         </div>
-
-        {/* Category Breakdown */}
-        <div style={chartContainerStyle}>
-          <h2 style={{ fontSize: 20, fontFamily: 'Roboto', fontWeight: 600, marginBottom: '20px' }}>
-            Grievances by Category
-          </h2>
-          {analyticsData.categoryBreakdown.map((item, index) => (
-            <div key={index} style={{ marginBottom: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '14px', fontWeight: '500' }}>{item.category}</span>
-                <span style={{ fontSize: '14px', color: '#6c757d' }}>{item.count} grievances ({item.percentage}%)</span>
-              </div>
-              <div style={progressBarStyle(item.percentage)}>
-                <div style={progressFillStyle(item.percentage)}></div>
-              </div>
-            </div>
-          ))}
-        </div>
-
+        
         {/* Officer Performance */}
         <div style={chartContainerStyle}>
           <h2 style={{ fontSize: 20, fontFamily: 'Roboto', fontWeight: 600, marginBottom: '20px' }}>

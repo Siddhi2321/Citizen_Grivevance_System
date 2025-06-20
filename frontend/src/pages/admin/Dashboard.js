@@ -10,14 +10,6 @@ const AdminDashboard = () => {
   const [officers, setOfficers] = useState([]);
   const [selectedOfficer, setSelectedOfficer] = useState({});
 
-  const [stats, setStats] = useState({
-  totalGrievances: 0,
-  resolved: 0,
-  inProgress: 0,
-  pending: 0,
-  revertBack: 0
-});
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -39,26 +31,7 @@ const AdminDashboard = () => {
         const complaintsData = await complaintsRes.json();
         const officersData = await officersRes.json();
 
-        const statsRes = await fetch(
-          "http://localhost:5000/api/admin/dashboard",
-          {
-            method: "GET",
-            credentials: "include",
-          }
-        );
-        const statsData = await statsRes.json();
-
-        if (statsRes.ok) {
-          setStats({
-            totalGrievances: statsData.totalGrievances || 0,
-            resolved: statsData.resolved || 0,
-            inProgress: statsData.inProgress || 0,
-            pending: statsData.pending || 0,
-            revertBack: statsData.revertBack || 0,
-          });
-        } else {
-          console.error("Error fetching stats:", statsData.message);
-        }
+        
 
         setPendingAssignments(complaintsData.complaints || []);
         setOfficers(officersData.officers || []);
@@ -377,62 +350,6 @@ const AdminDashboard = () => {
             </table>
           )}
         </div>
-
-       {/* Quick Stats */}
-<div
-  style={{
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-    gap: "20px",
-    marginTop: "30px",
-  }}
->
-  <div style={cardStyle}>
-    <h3 style={{ fontSize: "14px", color: "#6c757d", marginBottom: "8px" }}>
-      Total Grievances
-    </h3>
-    <div style={{ fontSize: "32px", fontWeight: "700", color: "#007bff" }}>
-      {stats.totalGrievances}
-    </div>
-  </div>
-
-  <div style={cardStyle}>
-    <h3 style={{ fontSize: "14px", color: "#6c757d", marginBottom: "8px" }}>
-      Resolved
-    </h3>
-    <div style={{ fontSize: "32px", fontWeight: "700", color: "#28a745" }}>
-      {stats.resolved}
-    </div>
-  </div>
-
-  <div style={cardStyle}>
-    <h3 style={{ fontSize: "14px", color: "#6c757d", marginBottom: "8px" }}>
-      In Progress
-    </h3>
-    <div style={{ fontSize: "32px", fontWeight: "700", color: "#ffc107" }}>
-      {stats.inProgress}
-    </div>
-  </div>
-
-  <div style={cardStyle}>
-    <h3 style={{ fontSize: "14px", color: "#6c757d", marginBottom: "8px" }}>
-      Pending
-    </h3>
-    <div style={{ fontSize: "32px", fontWeight: "700", color: "#dc3545" }}>
-      {stats.pending}
-    </div>
-  </div>
-
-  <div style={cardStyle}>
-    <h3 style={{ fontSize: "14px", color: "#6c757d", marginBottom: "8px" }}>
-      Sent Back (Revert)
-    </h3>
-    <div style={{ fontSize: "32px", fontWeight: "700", color: "#6f42c1" }}>
-      {stats.revertBack}
-    </div>
-  </div>
-</div>
-
 
       </div>
     </div>
