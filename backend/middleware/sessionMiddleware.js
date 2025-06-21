@@ -1,6 +1,6 @@
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
-require('dotenv').config();
+require("dotenv").config();
 
 const sessionMiddleware = session({
   secret: process.env.SESSION_SECRET || "officerSecret123",
@@ -8,14 +8,14 @@ const sessionMiddleware = session({
   saveUninitialized: false,
   store: MongoStore.create({
     mongoUrl: process.env.MONGO_URI,
-    collectionName: 'sessions'
+    collectionName: "sessions",
   }),
   cookie: {
-    maxAge: 2* 60 * 1000,
+    maxAge: 20 * 60 * 1000,
     httpOnly: true,
     sameSite: "lax",
-    secure: false
-  }
+    secure: false,
+  },
 });
 
 module.exports = sessionMiddleware;
