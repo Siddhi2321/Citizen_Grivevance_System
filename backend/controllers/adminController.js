@@ -158,57 +158,6 @@ exports.assignOfficerToComplaint = async (req, res) => {
 };
 
 
-// exports.getOfficerPerformance = async (req, res) => {
-//   try {
-//     const department = req.session.admin?.department;
-
-//     if (!department) {
-//       return res.status(401).json({ message: "Unauthorized: Admin not logged in" });
-//     }
-
-//     // Get all officers of this department
-//     const officers = await Officer.find({ department });
-
-//     // If no officers found
-//     if (officers.length === 0) {
-//       return res.status(200).json({ officerPerformance: [] });
-//     }
-
-//     // Get all complaints of this department
-//     const complaints = await Complaint.find({ department });
-
-//     // Prepare performance data
-//     const performance = officers.map(officer => {
-//       const assigned = complaints.filter(c => c.officerId?.toString() === officer._id.toString());
-//       const resolved = assigned.filter(c => c.status === 'resolved');
-
-//       const avgTime = resolved.length > 0
-//         ? (
-//             resolved.reduce((sum, comp) => {
-//               const submitted = new Date(comp.submittedAt).getTime();
-//               const updated = new Date(comp.updatedAt).getTime();
-//               const duration = (updated - submitted) / (1000 * 60 * 60 * 24); // in days
-//               return sum + duration;
-//             }, 0) / resolved.length
-//           ).toFixed(1)
-//         : 0;
-
-//       return {
-//         name: officer.name,
-//         assigned: assigned.length,
-//         resolved: resolved.length,
-//         avgTime: parseFloat(avgTime)
-//       };
-//     });
-
-//     res.status(200).json({ officerPerformance: performance });
-//   } catch (error) {
-//     console.error("Error in getOfficerPerformance:", error);
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
-
-
 // //officer performance
 exports.getOfficerPerformance = async (req, res) => {
   try {
@@ -249,6 +198,93 @@ exports.getOfficerPerformance = async (req, res) => {
 
   } catch (error) {
     console.error("Error fetching officer performance:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+exports.getExtendedAnalytics = async (req, res) => {
+  try {
+    const department = req.session.admin?.department;
+    if (!department) {
+      return res.status(401).json({ message: "Unauthorized: Admin not logged in" });
+    }
+
+    // CATEGORY BREAKDOWN
+    const categoryAggregation = await Complaint.aggregate([
+      { $match: { department } },
+      {        $group: {
+          _id: "$category",
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          category: "$_id",
+          count: 1,
+          _id: 0
+        }
+      }
+    ]);
+
+    const total = categoryAggregation.reduce((sum, cat) => sum + cat.count, 0);
+    const categoryBreakdown = categoryAggregation.map(cat => ({
+      category: cat.category,
+      count: cat.count,
+      percentage: Math.round((cat.count / total) * 100)
+    }));
+
+    // MONTHLY TRENDS
+    const monthlyTrendsAggregation = await Complaint.aggregate([
+      { $match: { department } },
+      {
+        $group: {
+          _id: {
+            month: { $month: "$submittedAt" },
+            year: { $year: "$submittedAt" }
+          },
+          submitted: { $sum: 1 },
+          resolved: {
+            $sum: {
+              $cond: [ { $eq: ["$status", "resolved"] }, 1, 0 ]
+            }
+          }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } }
+    ]);
+
+    const monthlyTrends = monthlyTrendsAggregation.map(entry => ({
+      month: new Date(entry._id.year, entry._id.month - 1).toLocaleString('default', { month: 'short' }),
+      submitted: entry.submitted,
+      resolved: entry.resolved
+    }));
+
+    // SYSTEM METRICS
+    const resolvedComplaints = await Complaint.find({ department, status: 'resolved' });
+    const reopenedComplaints = await Complaint.find({ department, logs: { $elemMatch: { status: 'revert_back' } } });
+
+    const avgResolutionTimeInMs = resolvedComplaints.reduce((sum, c) => sum + (new Date(c.updatedAt) - new Date(c.submittedAt)), 0) / (resolvedComplaints.length || 1);
+    const avgResolutionTime = (avgResolutionTimeInMs / (1000 * 60 * 60 * 24)).toFixed(1);
+
+    const totalResolved = resolvedComplaints.length;
+    const totalGrievances = await Complaint.countDocuments({ department });
+
+    const resolutionRate = totalGrievances > 0 ? ((totalResolved / totalGrievances) * 100).toFixed(0) + '%' : '0%';
+    const reopeningRate = totalGrievances > 0 ? ((reopenedComplaints.length / totalGrievances) * 100).toFixed(0) + '%' : '0%';
+
+    res.status(200).json({
+      categoryBreakdown,
+      monthlyTrends,
+      systemMetrics: {
+        averageResolutionTime: `${avgResolutionTime} days`,
+        responseTime: `${avgResolutionTime - 0.5} days`, // placeholder assumption
+        resolutionRate,
+        satisfactionScore: '4.3/5', // placeholder
+        reopeningRate
+      }
+    });
+  } catch (error) {
+    console.error("Extended analytics error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

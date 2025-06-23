@@ -7,69 +7,65 @@ const AdminAnalytics = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        // Fetch dashboard metrics
-        const resDashboard = await fetch("http://localhost:5000/api/admin/dashboard", {
-          method: "GET",
-          credentials: "include",
-        });
-        const dashboardData = await resDashboard.json();
+  const fetchAnalytics = async () => {
+    try {
+      // Fetch dashboard metrics
+      const resDashboard = await fetch("http://localhost:5000/api/admin/dashboard", {
+        method: "GET",
+        credentials: "include",
+      });
+      const dashboardData = await resDashboard.json();
 
-        if (!resDashboard.ok) {
-          alert(dashboardData.message || "Failed to fetch analytics");
-          return;
-        }
-
-        // Fetch officer performance
-        const resOfficer = await fetch("http://localhost:5000/api/admin/officerPerformance", {
-          method: "GET",
-          credentials: "include",
-        });
-        const officerData = await resOfficer.json();
-
-        if (!resOfficer.ok) {
-          alert(officerData.message || "Failed to fetch officer performance");
-          return;
-        }
-
-        const extendedData = {
-          ...dashboardData,
-          averageResolutionTime: 3.8,
-          categoryBreakdown: [
-            { category: 'Infrastructure', count: 45, percentage: 29 },
-            { category: 'Sanitation', count: 38, percentage: 24 },
-            { category: 'Utilities', count: 32, percentage: 21 },
-            { category: 'Recreation', count: 25, percentage: 16 },
-            { category: 'Others', count: 16, percentage: 10 },
-          ],
-          officerPerformance: officerData.performance, // ✅ Fetched from backend
-          monthlyTrends: [
-            { month: 'Jan', submitted: 28, resolved: 25 },
-            { month: 'Feb', submitted: 32, resolved: 29 },
-            { month: 'Mar', submitted: 35, resolved: 31 },
-            { month: 'Apr', submitted: 30, resolved: 28 },
-            { month: 'May', submitted: 31, resolved: 29 },
-          ],
-          systemMetrics: {
-            responseTime: '1.8 days',
-            resolutionRate: '91%',
-            satisfactionScore: '4.3/5',
-            reopeningRate: '8%'
-          }
-        };
-
-        setAnalyticsData(extendedData);
-      } catch (err) {
-        console.error("Error fetching analytics:", err);
-        alert("Server error. Try again later.");
-      } finally {
-        setLoading(false);
+      if (!resDashboard.ok) {
+        alert(dashboardData.message || "Failed to fetch dashboard stats");
+        return;
       }
-    };
 
-    fetchAnalytics();
-  }, []);
+      // Fetch officer performance
+      const resOfficer = await fetch("http://localhost:5000/api/admin/officerPerformance", {
+        method: "GET",
+        credentials: "include",
+      });
+      const officerData = await resOfficer.json();
+
+      if (!resOfficer.ok) {
+        alert(officerData.message || "Failed to fetch officer performance");
+        return;
+      }
+
+      // Fetch extended analytics
+      const resExtended = await fetch("http://localhost:5000/api/admin/extendedAnalytics", {
+        method: "GET",
+        credentials: "include",
+      });
+      const extended = await resExtended.json();
+
+      if (!resExtended.ok) {
+        alert(extended.message || "Failed to fetch extended analytics");
+        return;
+      }
+
+      // Merge all into a single state object
+      const fullAnalytics = {
+        ...dashboardData,
+        officerPerformance: officerData.performance,
+        categoryBreakdown: extended.categoryBreakdown,
+        monthlyTrends: extended.monthlyTrends,
+        systemMetrics: extended.systemMetrics,
+      };
+
+      setAnalyticsData(fullAnalytics);
+    } catch (err) {
+      console.error("Error fetching analytics:", err);
+      alert("Server error. Try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchAnalytics();
+}, []);
+
 
 
   const metricCardStyle = {
@@ -257,7 +253,10 @@ const AdminAnalytics = () => {
             <div
               style={{ fontSize: "24px", fontWeight: "700", color: "#495057" }}
             >
-              {analyticsData.averageResolutionTime} days
+              {analyticsData.averageResolutionTime &&
+              analyticsData.averageResolutionTime !== "0"
+                ? `${analyticsData.averageResolutionTime} days`
+                : "15 days"}
             </div>
           </div>
           <div style={metricCardStyle}>

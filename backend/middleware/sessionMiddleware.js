@@ -1,7 +1,6 @@
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 require("dotenv").config();
-
 const sessionMiddleware = session({
   secret: process.env.SESSION_SECRET || "officerSecret123",
   resave: false,

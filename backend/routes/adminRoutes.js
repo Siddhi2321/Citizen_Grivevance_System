@@ -10,6 +10,9 @@ router.post('/login', adminController.loginAdmin);
 
 //stats
 router.get('/dashboard', requireAdminSession, adminController.dashboardStats);
+router.get('/extendedAnalytics', requireAdminSession, adminController.getExtendedAnalytics);
+
+
 
 //assign complaints 
 router.get('/get-complaints', requireAdminSession, adminController.getDepartmentComplaints);

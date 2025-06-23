@@ -8,6 +8,7 @@ const CitizenDashboard = () => {
   const [userGrievances, setUserGrievances] = useState([]);
   const [loading, setLoading] = useState(true);
   const userType = localStorage.getItem("userType");
+  const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
     const fetchGrievances = async () => {
@@ -23,7 +24,9 @@ const CitizenDashboard = () => {
         );
 
         const data = await response.json();
-        console.log(data);
+
+        console.log(data.email);
+        setUserEmail(data.email);
         if (response.ok) {
           // data.complaints is the array returned from backend
           const mapped = data.complaints.map((g) => ({
@@ -75,28 +78,25 @@ const CitizenDashboard = () => {
     marginBottom: "20px",
   };
 
-  const statusStyle = (status) => ({
-    padding: "6px 12px",
-    borderRadius: "16px",
-    fontSize: "12px",
-    fontWeight: "600",
-    backgroundColor:
-      status === "Pending"
-        ? "#fff3cd"
-        : status === "In Progress"
-        ? "#cce5ff"
-        : status === "Resolved"
-        ? "#d4edda"
-        : "#f8d7da",
-    color:
-      status === "Pending"
-        ? "#856404"
-        : status === "In Progress"
-        ? "#004085"
-        : status === "Resolved"
-        ? "#155724"
-        : "#721c24",
-  });
+  const statusStyle = (status) => {
+  const base = {
+    fontWeight: 'bold',
+    padding: '4px 8px',
+    borderRadius: '6px',
+    fontSize: '14px',
+    textTransform: 'capitalize',
+    display: 'inline-block',
+  };
+
+  const colors = {
+    pending: { backgroundColor: '#fff3cd', color: '#856404' },
+    in_progress: { backgroundColor: '#d1ecf1', color: '#0c5460' },
+    revert_back: { backgroundColor: '#f8d7da', color: '#721c24' },
+    resolved: { backgroundColor: '#d4edda', color: '#155724' },
+  };
+
+  return { ...base, ...(colors[status] || {}) };
+};
 
   const buttonStyle = {
     padding: "8px 16px",
@@ -163,7 +163,7 @@ const CitizenDashboard = () => {
             marginBottom: "10px",
           }}
         >
-          Welcome Back!
+          Welcome Back {userEmail.split("@")[0]} !
         </h1>
         <p style={{ fontSize: 16, color: "#6c757d", marginBottom: "30px" }}>
           Track your submitted grievances and their current status
@@ -396,7 +396,12 @@ const CitizenDashboard = () => {
                       }}
                     >
                       <span style={statusStyle(grievance.status)}>
-                        {grievance.status}
+                        {{
+                          pending: "Pending",
+                          in_progress: "In Progress",
+                          revert_back: "Revert Back",
+                          resolved: "Resolved",
+                        }[grievance.status.toLowerCase()] || grievance.status.toLowerCase()}
                       </span>
                       <div style={{ display: "flex", gap: "8px" }}>
                         <button
@@ -407,7 +412,7 @@ const CitizenDashboard = () => {
                         >
                           Track
                         </button>
-                        {grievance.status === "Resolved" && (
+                        {grievance.status.toLowerCase() === "resolved" && (
                           <button
                             style={reopenButtonStyle}
                             onClick={() =>

@@ -1,19 +1,57 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { headerStyle } from '../../styles/layout';
+import { useEffect } from 'react';
 
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const userType = localStorage.getItem('userType');
-  const userName = localStorage.getItem('userName') || 'User';
 
-  const handleLogout = () => {
-    localStorage.removeItem('userType');
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userName');
-    navigate('/');
+ const handleLogout = async () => {
+  try {
+    await fetch("http://localhost:5000/api/logout", {
+      method: "GET",
+      credentials: "include"
+    });
+  } catch (error) {
+    console.error("Logout failed", error);
+  }
+
+  localStorage.clear();
+  navigate('/');
+};
+
+  useEffect(() => {
+  const validateSession = async () => {
+    const endpointMap = {
+      citizen: '/api/checkUserSession',
+      officer: '/api/checkOfficerSession',
+      admin: '/api/checkAdminSession',
+    };
+
+    const endpoint = endpointMap[userType];
+    if (!endpoint) return;
+
+    try {
+      const res = await fetch(`http://localhost:5000${endpoint}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        localStorage.clear();
+        navigate('/');
+      }
+    } catch {
+      localStorage.clear();
+      navigate('/');
+    }
   };
+
+  validateSession();
+}, [userType, navigate]);
+
 
   const navStyle = {
     ...headerStyle,
@@ -138,9 +176,6 @@ const Navigation = () => {
     <div style={navStyle}>
       {renderNavigation()}
       <div style={rightSectionStyle}>
-        <span style={userInfoStyle}>
-          Welcome, {userName}
-        </span>
         <button style={logoutButtonStyle} onClick={handleLogout}>
           Logout
         </button>

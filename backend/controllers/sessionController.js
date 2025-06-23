@@ -14,7 +14,6 @@ exports.checkOfficerSession = (req, res) => {
   }
 };
 
-// For admin
 exports.checkAdminSession = (req, res) => {
   if (req.session && req.session.admin) {
     return res.status(200).json({ message: "Admin logged in", admin: req.session.admin });

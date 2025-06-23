@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import DetailBlock from '../../components/common/DetailBlock';
-import { pageContainer } from '../../styles/layout';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import DetailBlock from "../../components/common/DetailBlock";
+import { pageContainer } from "../../styles/layout";
 
 const ActionLink = ({ text, onClick }) => (
   <div
     style={{
       fontSize: 18,
-      cursor: 'pointer',
-      color: '#007BFF',
-      textDecoration: 'underline'
+      cursor: "pointer",
+      color: "#007BFF",
+      textDecoration: "underline",
     }}
     onClick={onClick}
   >
@@ -27,54 +27,62 @@ const GrievanceTracking = () => {
   useEffect(() => {
     const fetchGrievance = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/complaints/${trackingId}`);
+        const response = await fetch(
+          `http://localhost:5000/api/complaints/${trackingId}`
+        );
         const data = await response.json();
 
         if (response.ok) {
           const g = data.complaint;
+          console.log(g);
           setGrievance({
             id: g.grievanceId,
             date: new Date(g.submittedAt).toLocaleDateString(),
             category: g.category,
             description: g.description,
-            location: `${g.location.addressLine}, ${g.location.city}`,
+            department: g.department,
+            contactEmail: g.contactEmail,
+            location: g.location?.state || "N/A",
             status: g.status,
-            officer: g.officer ? `${g.officer.name} (${g.officer.department})` : 'Not Assigned',
+            officer: g.officer
+              ? `${g.officer.name} (${g.officer.department})`
+              : "Not Assigned",
             lastUpdated: new Date(g.updatedAt).toLocaleDateString(),
-            resolution: 'TBD', // You can update this when backend gives ETA
+            attachments: g.attachments || [],
+            logs: g.logs || [],
           });
         } else {
-          alert(data.message || 'Could not fetch grievance');
+          alert(data.message || "Could not fetch grievance");
         }
       } catch (error) {
-        console.error('Error fetching grievance:', error);
-        alert('Error fetching grievance data.');
+        console.error("Error fetching grievance:", error);
+        alert("Error fetching grievance data.");
       } finally {
         setLoading(false);
       }
     };
 
     const checkSession = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/check-user-session", {
-        method: "GET",
-        credentials: "include",
-      });
-      setIsLoggedIn(res.ok); // true if 200 OK
-    } catch (err) {
-      console.error("Session check failed", err);
-    }
-  };
+      try {
+        const res = await fetch("http://localhost:5000/api/checkUserSession", {
+          method: "GET",
+          credentials: "include",
+        });
+        setIsLoggedIn(res.ok); // true if 200 OK
+      } catch (err) {
+        console.error("Session check failed", err);
+      }
+    };
 
-
-    if (trackingId){
+    if (trackingId) {
       fetchGrievance();
       checkSession();
-    } 
+    }
   }, [trackingId]);
 
   if (loading) return <div style={{ padding: 40 }}>Loading grievance...</div>;
-  if (!grievance) return <div style={{ padding: 40 }}>Grievance not found.</div>;
+  if (!grievance)
+    return <div style={{ padding: 40 }}>Grievance not found.</div>;
 
   return (
     <div
@@ -99,7 +107,9 @@ const GrievanceTracking = () => {
           <DetailBlock title="Grievance ID" value={grievance.id} />
           <DetailBlock title="Submission Date" value={grievance.date} />
           <DetailBlock title="Category" value={grievance.category} />
+          <DetailBlock title="Department" value={grievance.department} />
           <DetailBlock title="Location" value={grievance.location} />
+          <DetailBlock title="Contact Email" value={grievance.contactEmail} />
         </div>
         <div style={{ marginTop: 24 }}>
           <DetailBlock title="Description" value={grievance.description} />
@@ -109,7 +119,37 @@ const GrievanceTracking = () => {
       <div style={{ marginTop: 48 }}>
         <h2 style={{ fontSize: 28, marginBottom: 16 }}>Processing Status</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 40 }}>
-          <DetailBlock title="Current Status" value={grievance.status} />
+          <DetailBlock
+            title="Current Status"
+            value={
+              <span
+                style={{
+                  padding: "4px 12px",
+                  borderRadius: "999px",
+                  fontWeight: 600,
+                  color: "#fff",
+                  backgroundColor:
+                    grievance.status === "pending"
+                      ? "#ffc107"
+                      : grievance.status === "in_progress"
+                      ? "#17a2b8"
+                      : grievance.status === "revert_back"
+                      ? "#fd7e14"
+                      : grievance.status === "resolved"
+                      ? "#28a745"
+                      : "#6c757d",
+                }}
+              >
+                {{
+                  pending: "Pending",
+                  in_progress: "In Progress",
+                  revert_back: "Revert Back",
+                  resolved: "Resolved",
+                }[grievance.status] || grievance.status}
+              </span>
+            }
+          />
+
           <DetailBlock title="Assigned Officer" value={grievance.officer} />
           <DetailBlock
             title="Last Updated Date"
@@ -121,6 +161,65 @@ const GrievanceTracking = () => {
           />
         </div>
       </div>
+
+      {grievance.attachments && grievance.attachments.length > 0 && (
+        <div style={{ marginTop: 48 }}>
+          <h2 style={{ fontSize: 28, marginBottom: 16 }}>Attachments</h2>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+            {grievance.attachments.map((att, idx) => (
+              <div key={idx} style={{ textAlign: "center" }}>
+                <img
+                  src={att.fileUrl}
+                  alt={`attachment-${idx}`}
+                  style={{ maxWidth: 250, maxHeight: 200, borderRadius: 8 }}
+                />
+                <p style={{ marginTop: 8, fontSize: 14 }}>{att.fileType}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {grievance.logs && grievance.logs.length > 0 && (
+        <div style={{ marginTop: 48 }}>
+          <h2 style={{ fontSize: 28, marginBottom: 16 }}>Logs</h2>
+          {grievance.logs.map((log, index) => {
+            const statusMap = {
+              in_progress: "In Progress",
+              pending: "Pending",
+              revert_back: "Revert Back",
+              resolved: "Resolved",
+            };
+
+            return (
+              <div
+                key={index}
+                style={{
+                  padding: 12,
+                  border: "1px solid #ccc",
+                  borderRadius: 6,
+                  marginBottom: 12,
+                  backgroundColor: "#f9f9f9",
+                }}
+              >
+                <p>
+                  <strong>Status:</strong> {statusMap[log.status] || log.status}
+                </p>
+                <p>
+                  <strong>Message:</strong> {log.message}
+                </p>
+                <p>
+                  <strong>By:</strong> {log.officerName}
+                </p>
+                <p>
+                  <strong>Time:</strong>{" "}
+                  {new Date(log.timestamp).toLocaleString()}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <div
         style={{
@@ -147,4 +246,4 @@ const GrievanceTracking = () => {
   );
 };
 
-export default GrievanceTracking; 
+export default GrievanceTracking;

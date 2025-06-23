@@ -4,7 +4,6 @@ import Navigation from "../../components/common/Navigation";
 
 const AdminDashboard = () => {
   const [pendingAssignments, setPendingAssignments] = useState([]);
-  const [pendingAcceptances, setPendingAcceptances] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [officers, setOfficers] = useState([]);
@@ -75,17 +74,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleAcceptResolution = (grievanceId) => {
-    // Simulate API call
-    console.log("Accepting resolution for grievance:", grievanceId);
-    setPendingAcceptances((prev) => prev.filter((g) => g._id !== grievanceId));
-  };
-
-  const handleRejectResolution = (grievanceId) => {
-    // Simulate API call
-    console.log("Rejecting resolution for grievance:", grievanceId);
-    setPendingAcceptances((prev) => prev.filter((g) => g._id !== grievanceId));
-  };
 
   const cardStyle = {
     backgroundColor: "white",
@@ -152,17 +140,6 @@ const AdminDashboard = () => {
     color: "white",
   };
 
-  const acceptButtonStyle = {
-    ...buttonStyle,
-    backgroundColor: "#28a745",
-    color: "white",
-  };
-
-  const rejectButtonStyle = {
-    ...buttonStyle,
-    backgroundColor: "#dc3545",
-    color: "white",
-  };
 
   if (loading) {
     return (
@@ -275,73 +252,6 @@ const AdminDashboard = () => {
                         disabled={!selectedOfficer[grievance.grievanceId]}
                       >
                         Assign
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        {/* Pending Acceptances */}
-        <div style={cardStyle}>
-          <h2
-            style={{
-              fontSize: 24,
-              fontFamily: "Roboto",
-              fontWeight: 600,
-              marginBottom: "20px",
-            }}
-          >
-            Pending Acceptances ({pendingAcceptances.length})
-          </h2>
-          {pendingAcceptances.length === 0 ? (
-            <p style={{ fontSize: "14px", color: "#6c757d" }}>
-              No pending acceptances.
-            </p>
-          ) : (
-            <table style={tableStyle}>
-              <thead>
-                <tr>
-                  <th style={thStyle}>Grievance ID</th>
-                  <th style={thStyle}>Title</th>
-                  <th style={thStyle}>Category</th>
-                  <th style={thStyle}>Assigned Officer</th>
-                  <th style={thStyle}>Resolved Date</th>
-                  <th style={thStyle}>Resolution Notes</th>
-                  <th style={thStyle}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingAcceptances.map((grievance) => (
-                  <tr key={grievance._id}>
-                    <td style={tdStyle}>{grievance._id.slice(-8)}</td>
-                    <td style={tdStyle}>
-                      <div style={{ fontWeight: "500" }}>{grievance.title}</div>
-                    </td>
-                    <td style={tdStyle}>{grievance.category}</td>
-                    <td style={tdStyle}>{grievance.assignedOfficer}</td>
-                    <td style={tdStyle}>
-                      {new Date(grievance.resolvedDate).toLocaleDateString()}
-                    </td>
-                    <td style={tdStyle}>
-                      <div style={{ maxWidth: "200px", fontSize: "12px" }}>
-                        {grievance.resolutionNotes}
-                      </div>
-                    </td>
-                    <td style={tdStyle}>
-                      <button
-                        style={acceptButtonStyle}
-                        onClick={() => handleAcceptResolution(grievance._id)}
-                      >
-                        Accept
-                      </button>
-                      <button
-                        style={rejectButtonStyle}
-                        onClick={() => handleRejectResolution(grievance._id)}
-                      >
-                        Reject
                       </button>
                     </td>
                   </tr>

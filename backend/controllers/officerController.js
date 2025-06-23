@@ -29,7 +29,6 @@ exports.sendOtpToOfficer = async (req, res, next) => {
   }
 };
 
-//change or forgot password
 
 exports.registerOfficer = async (req, res) => {
   const {
@@ -69,38 +68,6 @@ exports.registerOfficer = async (req, res) => {
   }
 };
 
-// exports.loginOfficer = async (req, res) => {
-//   const { email, password } = req.body;
-
-//   try {
-//     const officer = await Officer.findOne({ email });
-//     if (!officer) return res.status(404).json({ message: "Officer not found" });
-
-//     const isMatch = await bcrypt.compare(password, officer.password);
-//     if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
-
-//     officer.lastLogin = new Date();
-//     await officer.save();
-
-//     req.session.officer = {
-//       email: user.email,
-//       loginTime: now
-//     };
-
-//     res.status(200).json({
-//       message: "Login successful",
-//       officer: {
-//         id: officer._id,
-//         name: officer.name,
-//         role: officer.role,
-//         department: officer.department
-//       }
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error });
-//   }
-// };
-
 exports.loginOfficerOrAdmin = async (req, res) => {
   const { email, password } = req.body;
 
@@ -117,10 +84,6 @@ exports.loginOfficerOrAdmin = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
-    // const isMatch = await bcrypt.compare(password, user.password);
-    // if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
-
     if(password !== user.password){
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -128,23 +91,23 @@ exports.loginOfficerOrAdmin = async (req, res) => {
     user.lastLogin = new Date();
     await user.save();
 
-    const sessionData = {
-      email: user.email,
-      department:user.department,
-      role:'admin',
-      loginTime: new Date(),
-    };
-
-    // Store session accordingly
-    if (userType === "officer") req.session.officer = sessionData;
-    else {
-      req.session.admin = {
-      email: user.email,
-      department: user.department,
-      role:'officer',
-      loginTime: Date.now()
-      };
-    } 
+    if (userType === "officer") {
+  req.session.officer = {
+    email: user.email,
+    department: user.department,
+    role: "officer",
+    loginTime: Date.now()
+  };
+} else {
+  req.session.admin = {
+    email: user.email,
+    department: user.department,
+    role: "admin",
+    loginTime: Date.now()
+  };
+}
+    console.log('Officer session:', req.session.officer);
+    console.log('Admin session:', req.session.admin);
 
     res.status(200).json({
       message: "Login successful",

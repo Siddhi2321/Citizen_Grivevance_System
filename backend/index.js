@@ -10,6 +10,7 @@ const officerRoutes = require("./routes/officerRoutes");
 const admin = require("./models/admin");
 const adminRoutes = require("./routes/adminRoutes");
 const sessionRoutes = require("./routes/sessionRoutes");
+const logoutRoutes = require("./routes/logoutRoute");
 const app = express();
 app.use(express.json());
 
@@ -39,6 +40,8 @@ app.use("/api/admin", adminRoutes);
 
 //session
 app.use("/api", sessionRoutes);
+
+app.use('/api', logoutRoutes);
 
 app.get("/", (req, res) => res.send("Backend Running..."));
 

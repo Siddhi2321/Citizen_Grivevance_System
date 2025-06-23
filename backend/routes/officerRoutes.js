@@ -25,5 +25,6 @@ router.get('/stats', requireOfficerSession, officerDashboard.getOfficerComplaint
 
 router.post('/submitUpdate/:grievanceId', requireOfficerSession, upload.single('file'), officerDashboard.submitGrievanceUpdate);
 
+router.get('/analyticsDetails', officerDashboard.getOfficerAnalyticsDetails);
 
 module.exports = router;
