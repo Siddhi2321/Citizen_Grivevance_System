@@ -12,12 +12,13 @@ const OfficerGrievanceDetails = () => {
   const [evidenceFile, setEvidenceFile] = useState(null);
   const [updateStatus, setUpdateStatus] = useState('');
   const [updateNotes, setUpdateNotes] = useState('');
+  const BASE_URL = process.env.BASE_URL;
 
   useEffect(() => {
     const fetchDetails = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/officer/grievance/${grievanceId}`,
+          `${BASE_URL}/api/officer/grievance/${grievanceId}`,
           { method: "GET", credentials: "include" }
         );
         const data = await res.json();
@@ -57,7 +58,7 @@ const OfficerGrievanceDetails = () => {
 
   try {
     const res = await fetch(
-      `http://localhost:5000/api/officer/submitUpdate/${grievanceId}`,
+      `${BASE_URL}/api/officer/submitUpdate/${grievanceId}`,
       {
         method: "POST",
         credentials: "include",

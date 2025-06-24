@@ -7,6 +7,7 @@ import MessagePopup from "../../components/common/MessagePopup";
 import DetailBlock from "../../components/common/DetailBlock";
 
 const GrievanceSubmission = () => {
+  const BASE_URL = process.env.BASE_URL;
   const navigate = useNavigate();
   const userType = localStorage.getItem("userType");
   const isAuthenticated = localStorage.getItem("isAuthenticated");
@@ -170,7 +171,7 @@ const GrievanceSubmission = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/complaints/submit",
+        `${BASE_URL}/api/complaints/submit`,
         {
           method: "POST",
           body: formData,

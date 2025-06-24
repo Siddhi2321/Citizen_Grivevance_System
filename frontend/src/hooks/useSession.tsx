@@ -7,7 +7,7 @@ export const useSession = (role: Role) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
+  const BASE_URL = process.env.base_URL;
   useEffect(() => {  
     const endpointMap: Record<Role, string> = {
       citizen: '/api/checkUserSession',
@@ -17,7 +17,7 @@ export const useSession = (role: Role) => {
 
     const checkSession = async () => {
       try {
-        const res = await fetch(`http://localhost:5000${endpointMap[role]}`, {
+        const res = await fetch(`${BASE_URL}${endpointMap[role]}`, {
           method: 'GET',
           credentials: 'include',
         });

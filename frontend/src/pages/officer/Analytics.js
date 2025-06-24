@@ -6,16 +6,16 @@ const OfficerAnalytics = () => {
   const [keyMetrics, setKeyMetrics] = useState(null);
 const [performanceData, setPerformanceData] = useState(null);
 const [loading, setLoading] = useState(true);
-
+const BASE_URL = process.env.BASE_URL;
 useEffect(() => {
   const fetchAllOfficerAnalytics = async () => {
     try {
       const [statsRes, detailsRes] = await Promise.all([
-        fetch("http://localhost:5000/api/officer/stats", {
+        fetch(`${BASE_URL}/api/officer/stats`, {
           method: "GET",
           credentials: "include",
         }),
-        fetch("http://localhost:5000/api/officer/analyticsDetails", {
+        fetch(`${BASE_URL}/api/officer/analyticsDetails`, {
           method: "GET",
           credentials: "include",
         })

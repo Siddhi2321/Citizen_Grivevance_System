@@ -5,12 +5,12 @@ import Navigation from '../../components/common/Navigation';
 const AdminAnalytics = () => {
   const [analyticsData, setAnalyticsData] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const BASE_URL = process.env.BASE_URL;
   useEffect(() => {
   const fetchAnalytics = async () => {
     try {
       // Fetch dashboard metrics
-      const resDashboard = await fetch("http://localhost:5000/api/admin/dashboard", {
+      const resDashboard = await fetch(`${BASE_URL}/api/admin/dashboard`, {
         method: "GET",
         credentials: "include",
       });
@@ -22,7 +22,7 @@ const AdminAnalytics = () => {
       }
 
       // Fetch officer performance
-      const resOfficer = await fetch("http://localhost:5000/api/admin/officerPerformance", {
+      const resOfficer = await fetch(`${BASE_URL}/api/admin/officerPerformance`, {
         method: "GET",
         credentials: "include",
       });
@@ -34,7 +34,7 @@ const AdminAnalytics = () => {
       }
 
       // Fetch extended analytics
-      const resExtended = await fetch("http://localhost:5000/api/admin/extendedAnalytics", {
+      const resExtended = await fetch(`${BASE_URL}/api/admin/extendedAnalytics`, {
         method: "GET",
         credentials: "include",
       });

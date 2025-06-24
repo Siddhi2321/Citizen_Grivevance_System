@@ -7,12 +7,12 @@ const OfficerDashboard = () => {
   const navigate = useNavigate();
   const [assignedGrievances, setAssignedGrievances] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const BASE_URL = process.env.BASE_URL;
   useEffect(() => {
     const fetchGrievances = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/officer/dashboard",
+          `${BASE_URL}/api/officer/dashboard`,
           {
             method: "GET",
             credentials: "include",

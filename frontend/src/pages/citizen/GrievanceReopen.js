@@ -10,13 +10,13 @@ const GrievanceReopen = () => {
   const [loading, setLoading] = useState(true);
   const [newRemarks, setNewRemarks] = useState("");
   const [newEvidence, setNewEvidence] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-
+  const [submitting, setSubmitting] = useState(false); 
+  const BASE_URL = process.env.BASE_URL;
   useEffect(() => {
     const fetchGrievance = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/complaints/grievances/${grievanceId}`,
+          `${BASE_URL}/api/complaints/grievances/${grievanceId}`,
           {
             credentials: "include", // if using session auth
           }
@@ -62,7 +62,7 @@ const GrievanceReopen = () => {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/complaints/${grievanceId}/reopen`,
+        `${BASE_URL}/api/complaints/${grievanceId}/reopen`,
         {
           method: "POST",
           body: formData,

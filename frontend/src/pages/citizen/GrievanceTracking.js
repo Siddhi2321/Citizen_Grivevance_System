@@ -23,12 +23,12 @@ const GrievanceTracking = () => {
   const [grievance, setGrievance] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  const BASE_URL = process.env.BASE_URL;
   useEffect(() => {
     const fetchGrievance = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/complaints/${trackingId}`
+          `${BASE_URL}/api/complaints/${trackingId}`
         );
         const data = await response.json();
 
@@ -64,7 +64,7 @@ const GrievanceTracking = () => {
 
     const checkSession = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/checkUserSession", {
+        const res = await fetch(`${BASE_URL}/api/checkUserSession`, {
           method: "GET",
           credentials: "include",
         });

@@ -7,10 +7,10 @@ const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const userType = localStorage.getItem('userType');
-
+  const BASE_URL = process.env.BASE_URL;
  const handleLogout = async () => {
   try {
-    await fetch("http://localhost:5000/api/logout", {
+    await fetch(`${BASE_URL}/api/logout`, {
       method: "GET",
       credentials: "include"
     });
@@ -34,7 +34,7 @@ const Navigation = () => {
     if (!endpoint) return;
 
     try {
-      const res = await fetch(`http://localhost:5000${endpoint}`, {
+      const res = await fetch(`${BASE_URL}${endpoint}`, {
         method: 'GET',
         credentials: 'include',
       });

@@ -7,7 +7,7 @@ const Header = () => {
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const isAuthenticated = localStorage.getItem('isAuthenticated');
-
+  const BASE_URL = process.env.BASE_URL;
   const handleLogout = () => setShowLogoutConfirm(true);
 
   const confirmLogout = () => {
@@ -28,7 +28,7 @@ const Header = () => {
       if (!endpoint) return confirmLogout();
 
       try {
-        const res = await fetch(`http://localhost:5000${endpoint}`, {
+        const res = await fetch(`${BASE_URL}${endpoint}`, {
           method: 'GET',
           credentials: 'include',
         });

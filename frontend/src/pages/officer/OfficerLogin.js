@@ -11,7 +11,7 @@ const OfficerLogin = () => {
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
     const [showMessage, setShowMessage] = useState(false);
-
+    const BASE_URL = process.env.BASE_URL;
     const handleLogin = async () => {
     if (!email || !password) {
         setMessage('Please fill in all fields');
@@ -20,10 +20,10 @@ const OfficerLogin = () => {
     }
 
     try {
-        const response = await fetch('http://localhost:5000/api/officer/login', {
+        const response = await fetch(`${BASE_URL}/api/officer/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'include', // Important for session cookies
+            credentials: 'include',
             body: JSON.stringify({ email, password })
         });
 

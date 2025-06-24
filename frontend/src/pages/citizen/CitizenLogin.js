@@ -12,7 +12,7 @@ const CitizenLogin = () => {
     const [showOtpField, setShowOtpField] = useState(false);
     const [message, setMessage] = useState('');
     const [showMessage, setShowMessage] = useState(false);
-
+    const BASE_URL = process.env.BASE_URL;
     const validateEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
@@ -35,7 +35,7 @@ const CitizenLogin = () => {
 
         try {
             // TODO: Replace with actual MongoDB API call
-            const response = await fetch('http://localhost:5000/api/auth/send-otp', {
+            const response = await fetch(`${BASE_URL}/api/auth/send-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })

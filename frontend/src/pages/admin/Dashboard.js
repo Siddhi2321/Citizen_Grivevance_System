@@ -8,19 +8,19 @@ const AdminDashboard = () => {
 
   const [officers, setOfficers] = useState([]);
   const [selectedOfficer, setSelectedOfficer] = useState({});
-
+  const BASE_URL = process.env.BASE_URL;
   useEffect(() => {
     const fetchData = async () => {
       try {
         const complaintsRes = await fetch(
-          "http://localhost:5000/api/admin/get-complaints",
+          `${BASE_URL}/api/admin/get-complaints`,
           {
             method: "GET",
             credentials: "include",
           }
         );
         const officersRes = await fetch(
-          "http://localhost:5000/api/admin/get-officers",
+          `${BASE_URL}/api/admin/get-officers`,
           {
             method: "GET",
             credentials: "include",
@@ -46,7 +46,7 @@ const AdminDashboard = () => {
 
   const handleAssignGrievance = async (grievanceId, officerName) => {
     try {
-      const res = await fetch("http://localhost:5000/api/admin/assign", {
+      const res = await fetch(`${BASE_URL}/api/admin/assign`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

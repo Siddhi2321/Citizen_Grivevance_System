@@ -9,12 +9,12 @@ const CitizenDashboard = () => {
   const [loading, setLoading] = useState(true);
   const userType = localStorage.getItem("userType");
   const [userEmail, setUserEmail] = useState("");
-
+  const BASE_URL = process.env.BASE_URL;
   useEffect(() => {
     const fetchGrievances = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/complaints/userComplaints`,
+          `${BASE_URL}/api/complaints/userComplaints`,
           {
             credentials: "include",
             headers: {
@@ -276,20 +276,6 @@ const CitizenDashboard = () => {
             >
               Submit New Grievance
             </button>
-            {/* <button 
-              style={{ 
-                ...trackButtonStyle, 
-                width: '100%', 
-                padding: '15px', 
-                fontSize: '14px',
-                display: 'block',
-                textAlign: 'center',
-                backgroundColor: '#6c757d'
-              }}
-              onClick={() => navigate('/track')}
-            >
-              Track by ID
-            </button> */}
           </div>
         </div>
 
